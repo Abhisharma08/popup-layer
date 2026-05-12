@@ -1,38 +1,34 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import client from '../api/client';
 
 export default function PopupLeads() {
   const { id } = useParams();
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchLeads();
-  }, [id]);
-
-  const fetchLeads = async () => {
+  const fetchLeads = useCallback(async () => {
     try {
-      const res = await fetch(`http://localhost:4000/api/leads?popupId=${id}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      if (res.ok) {
-        setLeads(await res.json());
-      }
+      const { data } = await client.get('/leads', { params: { popupId: id } });
+      setLeads(data);
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    queueMicrotask(fetchLeads);
+  }, [fetchLeads]);
 
   const handleExportCSV = async () => {
     try {
-      const res = await fetch(`http://localhost:4000/api/leads/export?popupId=${id}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      const res = await client.get('/leads/export', {
+        params: { popupId: id },
+        responseType: 'blob'
       });
-      if (!res.ok) throw new Error('Failed to export');
-      
-      const blob = await res.blob();
+      const blob = res.data;
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -81,7 +77,9 @@ export default function PopupLeads() {
             try {
               const parsed = JSON.parse(l.customData);
               Object.keys(parsed).forEach(k => customKeys.add(k));
-            } catch (e) {}
+            } catch {
+              // Ignore malformed custom data from older records.
+            }
           }
         });
         const customKeysArray = Array.from(customKeys);
@@ -115,7 +113,9 @@ export default function PopupLeads() {
                         try {
                           const parsed = JSON.parse(lead.customData);
                           val = parsed[key] || '-';
-                        } catch (e) {}
+                        } catch {
+                          val = '-';
+                        }
                       }
                       return <td key={key} className="px-6 py-4 text-gray-500">{val}</td>;
                     })}

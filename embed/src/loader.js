@@ -1,8 +1,14 @@
-const API_BASE = 'http://localhost:4000/api';
+let apiBase = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+
+export function setApiBase(value) {
+  if (value && /^https?:\/\//i.test(value)) {
+    apiBase = value.replace(/\/$/, '');
+  }
+}
 
 export async function fetchPopups(siteId) {
   try {
-    const res = await fetch(`${API_BASE}/embed/${siteId}`);
+    const res = await fetch(`${apiBase}/embed/${siteId}`);
     return await res.json();
   } catch {
     return { popups: [] };
@@ -11,7 +17,7 @@ export async function fetchPopups(siteId) {
 
 export async function fetchPopupById(popupId) {
   try {
-    const res = await fetch(`${API_BASE}/embed/popup/${popupId}`);
+    const res = await fetch(`${apiBase}/embed/popup/${popupId}`);
     return await res.json();
   } catch {
     return { popups: [] };
@@ -20,7 +26,7 @@ export async function fetchPopupById(popupId) {
 
 export async function submitLead(data) {
   try {
-    await fetch(`${API_BASE}/leads`, {
+    await fetch(`${apiBase}/leads`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -32,7 +38,7 @@ export async function submitLead(data) {
 
 export async function trackEvent(popupId, event, variant = "A") {
   try {
-    await fetch(`${API_BASE}/analytics/event`, {
+    await fetch(`${apiBase}/analytics/event`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ popupId, event, variant })

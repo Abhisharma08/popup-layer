@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBuilderStore } from '../store/builderStore';
 import PopupPreview from '../components/builder/PopupPreview';
+import client from '../api/client';
 
 const FIELD_TYPES = [
   { value: 'text', label: 'Text' },
@@ -102,30 +103,6 @@ export default function PopupBuilder() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditing = Boolean(id);
-
-  useEffect(() => {
-    if (isEditing) {
-      fetch(`http://localhost:4000/api/popups/${id}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (!data.error) {
-          useBuilderStore.setState({
-            popupType: data.type,
-            popupName: data.name,
-            config: data.config,
-            triggers: data.triggers,
-            webhookUrl: data.webhookUrl || '',
-            abTestEnabled: data.abTestEnabled,
-            configB: data.configB || null,
-            triggersB: data.triggersB || null
-          });
-        }
-      });
-    }
-  }, [id]);
-
   const [showTemplates, setShowTemplates] = useState(false);
   const [showAddField, setShowAddField] = useState(false);
   const [newFieldLabel, setNewFieldLabel] = useState('');
@@ -138,39 +115,54 @@ export default function PopupBuilder() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  useEffect(() => {
+    if (isEditing) {
+      client.get(`/popups/${id}`)
+      .then(({ data }) => {
+        if (!data.error) {
+          useBuilderStore.setState({
+            popupType: data.type,
+            popupName: data.name,
+            config: data.config,
+            triggers: data.triggers,
+            webhookUrl: data.webhookUrl || '',
+            abTestEnabled: data.abTestEnabled,
+            configB: data.configB || null,
+            triggersB: data.triggersB || null
+          });
+        }
+      })
+      .catch(() => showToast('Failed to load popup.', 'error'));
+    } else {
+      useBuilderStore.getState().reset();
+    }
+  }, [id, isEditing]);
+
   const currentConfig = activeVariant === 'A' ? config : (configB || config);
   const currentTriggers = activeVariant === 'A' ? triggers : (triggersB || triggers);
 
   const handleSave = async () => {
     try {
-      const url = isEditing ? `http://localhost:4000/api/popups/${id}` : 'http://localhost:4000/api/popups';
-      const method = isEditing ? 'PUT' : 'POST';
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          workspaceId: localStorage.getItem('workspaceId') || 'test-workspace',
-          name: popupName || 'My Popup',
-          type: popupType,
-          config,
-          triggers,
-          webhookUrl,
-          abTestEnabled,
-          configB,
-          triggersB
-        })
-      });
-      if (response.ok) {
-        showToast('🎉 Popup saved successfully!', 'success');
-      } else {
-        showToast('Failed to save popup. Please try again.', 'error');
-      }
+      const payload = {
+        workspaceId: localStorage.getItem('workspaceId'),
+        name: popupName || 'My Popup',
+        type: popupType,
+        config,
+        triggers,
+        webhookUrl,
+        abTestEnabled,
+        configB,
+        triggersB
+      };
+      const response = isEditing
+        ? await client.put(`/popups/${id}`, payload)
+        : await client.post('/popups', payload);
+
+      showToast('Popup saved successfully!', 'success');
+      if (!isEditing) navigate(`/popups/${response.data.id}/edit`);
     } catch (e) {
       console.error(e);
-      showToast('Network error. Could not save popup.', 'error');
+      showToast(e.response?.data?.error || 'Network error. Could not save popup.', 'error');
     }
   };
 

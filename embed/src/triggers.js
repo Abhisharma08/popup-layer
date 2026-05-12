@@ -11,8 +11,12 @@ export function evaluateTriggers(popup, callback) {
 
   // URL match check
   if (triggers.urlMatch) {
-    const pattern = new RegExp(triggers.urlMatch);
-    if (!pattern.test(window.location.href)) return;
+    try {
+      const pattern = new RegExp(triggers.urlMatch);
+      if (!pattern.test(window.location.href)) return;
+    } catch {
+      return;
+    }
   }
 
   // Device check
@@ -30,7 +34,8 @@ export function evaluateTriggers(popup, callback) {
 
   else if (triggers.type === 'scroll_percent') {
     const onScroll = () => {
-      const scrolled = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+      const scrollable = document.body.scrollHeight - window.innerHeight;
+      const scrolled = scrollable <= 0 ? 100 : (window.scrollY / scrollable) * 100;
       if (scrolled >= (triggers.scrollPercent || 50)) {
         window.removeEventListener('scroll', onScroll);
         markShown(storageKey, triggers.frequency);

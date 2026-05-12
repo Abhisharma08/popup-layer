@@ -1,122 +1,101 @@
 const router = require('express').Router();
 const auth = require('../middleware/auth');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
+const { asyncHandler } = require('../lib/http');
+const { getAccessibleWorkspace, getAccessiblePopup } = require('../lib/authz');
+const {
+  requireString,
+  validateJsonObject,
+  validateOptionalUrl,
+  validatePopupType,
+  validateStatus,
+} = require('../lib/validators');
 
-// All routes require auth
 router.use(auth);
 
-// GET /api/popups?workspaceId=xxx
-router.get('/', async (req, res) => {
-  const { workspaceId } = req.query;
-  const popups = await prisma.popup.findMany({
-    where: { workspaceId },
-    orderBy: { createdAt: 'desc' }
-  });
-  // Parse config and triggers back to JSON for the frontend
-  const parsedPopups = popups.map(p => ({
-    ...p,
-    config: JSON.parse(p.config),
-    triggers: JSON.parse(p.triggers),
-    configB: p.configB ? JSON.parse(p.configB) : null,
-    triggersB: p.triggersB ? JSON.parse(p.triggersB) : null
-  }));
-  res.json(parsedPopups);
-});
-
-// GET /api/popups/:id
-router.get('/:id', async (req, res) => {
-  const popup = await prisma.popup.findUnique({
-    where: { id: req.params.id }
-  });
-  if (!popup) return res.status(404).json({ error: 'Popup not found' });
-  
-  // Verify ownership via workspace
-  // (Assuming we might want to check this, but for now just returning)
-  res.json({
+function serializePopup(popup) {
+  return {
     ...popup,
     config: JSON.parse(popup.config),
     triggers: JSON.parse(popup.triggers),
     configB: popup.configB ? JSON.parse(popup.configB) : null,
-    triggersB: popup.triggersB ? JSON.parse(popup.triggersB) : null
-  });
-});
+    triggersB: popup.triggersB ? JSON.parse(popup.triggersB) : null,
+  };
+}
 
-// POST /api/popups
-router.post('/', async (req, res) => {
-  const { workspaceId, name, type, config, triggers, webhookUrl, abTestEnabled, configB, triggersB } = req.body;
-  const popup = await prisma.popup.create({
-    data: { 
-      workspaceId, 
-      name, 
-      type, 
-      config: JSON.stringify(config), 
-      triggers: JSON.stringify(triggers),
-      webhookUrl,
-      abTestEnabled: Boolean(abTestEnabled),
-      configB: configB ? JSON.stringify(configB) : null,
-      triggersB: triggersB ? JSON.stringify(triggersB) : null
-    }
-  });
-  res.json({
-    ...popup,
-    config: JSON.parse(popup.config),
-    triggers: JSON.parse(popup.triggers),
-    configB: popup.configB ? JSON.parse(popup.configB) : null,
-    triggersB: popup.triggersB ? JSON.parse(popup.triggersB) : null
-  });
-});
+function popupDataFromBody(body, isCreate = false) {
+  const data = {
+    name: requireString(body.name, 'Popup name', 120),
+    config: JSON.stringify(validateJsonObject(body.config, 'Config')),
+    triggers: JSON.stringify(validateJsonObject(body.triggers, 'Triggers')),
+    webhookUrl: validateOptionalUrl(body.webhookUrl, 'Webhook URL'),
+    abTestEnabled: Boolean(body.abTestEnabled),
+    configB: body.configB ? JSON.stringify(validateJsonObject(body.configB, 'Variant B config')) : null,
+    triggersB: body.triggersB ? JSON.stringify(validateJsonObject(body.triggersB, 'Variant B triggers')) : null,
+  };
 
-// PUT /api/popups/:id
-router.put('/:id', async (req, res) => {
-  const { name, config, triggers, status, webhookUrl, abTestEnabled, configB, triggersB } = req.body;
-  const popup = await prisma.popup.update({
-    where: { id: req.params.id },
-    data: { 
-      name, 
-      config: JSON.stringify(config), 
-      triggers: JSON.stringify(triggers), 
-      status,
-      webhookUrl,
-      abTestEnabled: Boolean(abTestEnabled),
-      configB: configB ? JSON.stringify(configB) : null,
-      triggersB: triggersB ? JSON.stringify(triggersB) : null
-    }
-  });
-  res.json({
-    ...popup,
-    config: JSON.parse(popup.config),
-    triggers: JSON.parse(popup.triggers),
-    configB: popup.configB ? JSON.parse(popup.configB) : null,
-    triggersB: popup.triggersB ? JSON.parse(popup.triggersB) : null
-  });
-});
-
-// PATCH /api/popups/:id/status — lightweight status toggle (ACTIVE, PAUSED, ARCHIVED)
-router.patch('/:id/status', async (req, res) => {
-  const { status } = req.body;
-  if (!['ACTIVE', 'PAUSED', 'DRAFT', 'ARCHIVED'].includes(status)) {
-    return res.status(400).json({ error: 'Invalid status' });
+  if (isCreate) {
+    data.type = validatePopupType(body.type);
+    data.workspaceId = requireString(body.workspaceId, 'Workspace ID', 120);
+  } else if (body.status) {
+    data.status = validateStatus(body.status);
   }
+
+  return data;
+}
+
+router.get('/', asyncHandler(async (req, res) => {
+  const workspace = await getAccessibleWorkspace(req.user.userId, req.query.workspaceId);
+  const popups = await prisma.popup.findMany({
+    where: { workspaceId: workspace.id },
+    orderBy: { createdAt: 'desc' },
+  });
+  res.json(popups.map(serializePopup));
+}));
+
+router.get('/:id', asyncHandler(async (req, res) => {
+  const popup = await getAccessiblePopup(req.user.userId, req.params.id);
+  res.json(serializePopup(popup));
+}));
+
+router.post('/', asyncHandler(async (req, res) => {
+  const data = popupDataFromBody(req.body, true);
+  await getAccessibleWorkspace(req.user.userId, data.workspaceId);
+
+  const popup = await prisma.popup.create({ data });
+  res.status(201).json(serializePopup(popup));
+}));
+
+router.put('/:id', asyncHandler(async (req, res) => {
+  await getAccessiblePopup(req.user.userId, req.params.id);
+  const data = popupDataFromBody(req.body);
+
   const popup = await prisma.popup.update({
     where: { id: req.params.id },
-    data: { status }
+    data,
+  });
+  res.json(serializePopup(popup));
+}));
+
+router.patch('/:id/status', asyncHandler(async (req, res) => {
+  await getAccessiblePopup(req.user.userId, req.params.id);
+  const status = validateStatus(req.body.status);
+
+  const popup = await prisma.popup.update({
+    where: { id: req.params.id },
+    data: { status },
   });
   res.json(popup);
-});
+}));
 
-// DELETE /api/popups/:id — archive instead of hard delete
-router.delete('/:id', async (req, res) => {
-  try {
-    const popup = await prisma.popup.update({
-      where: { id: req.params.id },
-      data: { status: 'ARCHIVED' }
-    });
-    res.json({ success: true, popup });
-  } catch (e) {
-    console.error('Archive error:', e);
-    res.status(500).json({ error: 'Failed to archive popup' });
-  }
-});
+router.delete('/:id', asyncHandler(async (req, res) => {
+  await getAccessiblePopup(req.user.userId, req.params.id);
+
+  const popup = await prisma.popup.update({
+    where: { id: req.params.id },
+    data: { status: 'ARCHIVED' },
+  });
+  res.json({ success: true, popup });
+}));
 
 module.exports = router;

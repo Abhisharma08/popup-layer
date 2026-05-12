@@ -1,88 +1,136 @@
 const router = require('express').Router();
+const rateLimit = require('express-rate-limit');
 const auth = require('../middleware/auth');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
+const { asyncHandler } = require('../lib/http');
+const { getAccessiblePopup } = require('../lib/authz');
+const {
+  cleanString,
+  optionalString,
+  validateEmail,
+  validateOptionalUrl,
+  validateVariant,
+  parsePagination,
+} = require('../lib/validators');
 
-// POST /api/leads — public, called by embed script
-router.post('/', async (req, res) => {
+const leadLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+function csvEscape(value) {
+  return `"${String(value ?? '').replace(/"/g, '""')}"`;
+}
+
+function buildLeadCsv(leads) {
+  const customKeys = new Set();
+  leads.forEach(lead => {
+    if (!lead.customData) return;
+    try {
+      Object.keys(JSON.parse(lead.customData)).forEach(key => customKeys.add(key));
+    } catch {}
+  });
+
+  const customKeysArray = Array.from(customKeys);
+  const rows = [
+    ['Email', 'Name', 'Phone', 'Source URL', 'Variant', 'Date', ...customKeysArray],
+    ...leads.map(lead => {
+      let custom = {};
+      if (lead.customData) {
+        try {
+          custom = JSON.parse(lead.customData);
+        } catch {}
+      }
+      return [
+        lead.email,
+        lead.name || '',
+        lead.phone || '',
+        lead.sourceUrl || '',
+        lead.variant,
+        lead.createdAt.toISOString(),
+        ...customKeysArray.map(key => custom[key] || ''),
+      ];
+    }),
+  ];
+
+  return rows.map(row => row.map(csvEscape).join(',')).join('\n');
+}
+
+router.post('/', leadLimiter, asyncHandler(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  const { popupId, email, name, phone, sourceUrl, variant = "A", customFields } = req.body;
-  if (!popupId || !email) return res.status(400).json({ error: 'Missing fields' });
+
+  const popupId = cleanString(req.body.popupId, 120);
+  const email = validateEmail(req.body.email);
+  const name = optionalString(req.body.name, 200);
+  const phone = optionalString(req.body.phone, 50);
+  const sourceUrl = validateOptionalUrl(req.body.sourceUrl, 'Source URL');
+  const variant = validateVariant(req.body.variant);
+  const customFields = req.body.customFields && typeof req.body.customFields === 'object'
+    ? req.body.customFields
+    : null;
+
+  if (!popupId) return res.status(400).json({ error: 'Popup ID is required' });
+
+  const popup = await prisma.popup.findUnique({ where: { id: popupId } });
+  if (!popup || popup.status !== 'ACTIVE') {
+    return res.status(404).json({ error: 'Popup not found' });
+  }
 
   const customDataStr = customFields ? JSON.stringify(customFields) : null;
 
-  // Check if popup exists and fetch webhook URL
-  const popup = await prisma.popup.findUnique({ where: { id: popupId } });
-  if (!popup) return res.status(404).json({ error: 'Popup not found' });
-
-  // Use upsert to avoid duplicate leads per popup
   const lead = await prisma.lead.upsert({
     where: { popupId_email: { popupId, email } },
-    update: { sourceUrl, variant, customData: customDataStr },
-    create: { popupId, email, name, phone, sourceUrl, variant, customData: customDataStr }
+    update: { sourceUrl, variant, customData: customDataStr, name, phone },
+    create: { popupId, email, name, phone, sourceUrl, variant, customData: customDataStr },
   });
 
-  // Track submit event
   await prisma.analyticsEvent.create({
-    data: { popupId, event: 'SUBMIT', variant }
+    data: { popupId, event: 'SUBMIT', variant },
   });
 
-  // Webhook dispatch
   if (popup.webhookUrl) {
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
       fetch(popup.webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name, phone, sourceUrl, popupId, variant, leadId: lead.id, customFields })
-      }).catch(err => console.error("Webhook error:", err)); // async catch
-    } catch (e) {}
+        body: JSON.stringify({ email, name, phone, sourceUrl, popupId, variant, leadId: lead.id, customFields }),
+        signal: controller.signal,
+      })
+        .catch(error => console.error('Webhook error:', error.message))
+        .finally(() => clearTimeout(timeout));
+    } catch {}
   }
 
   res.json({ success: true, leadId: lead.id });
-});
-// GET /api/leads?popupId=xxx — protected
-router.get('/', auth, async (req, res) => {
-  const { popupId } = req.query;
+}));
+
+router.get('/', auth, asyncHandler(async (req, res) => {
+  const popup = await getAccessiblePopup(req.user.userId, req.query.popupId);
+  const { limit, offset } = parsePagination(req.query);
+
   const leads = await prisma.lead.findMany({
-    where: { popupId },
-    orderBy: { createdAt: 'desc' }
+    where: { popupId: popup.id },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    skip: offset,
   });
   res.json(leads);
-});
+}));
 
-// GET /api/leads/export?popupId=xxx
-router.get('/export', auth, async (req, res) => {
-  const leads = await prisma.lead.findMany({ where: { popupId: req.query.popupId } });
-
-  // Extract all unique custom field keys
-  const customKeys = new Set();
-  leads.forEach(l => {
-    if (l.customData) {
-      try {
-        const parsed = JSON.parse(l.customData);
-        Object.keys(parsed).forEach(k => customKeys.add(k));
-      } catch (e) {}
-    }
+router.get('/export', auth, asyncHandler(async (req, res) => {
+  const popup = await getAccessiblePopup(req.user.userId, req.query.popupId);
+  const leads = await prisma.lead.findMany({
+    where: { popupId: popup.id },
+    orderBy: { createdAt: 'desc' },
   });
-  const customKeysArray = Array.from(customKeys);
-
-  const csv = [
-    ['Email', 'Name', 'Phone', 'Source URL', 'Date', ...customKeysArray],
-    ...leads.map(l => {
-      let customVals = customKeysArray.map(() => '');
-      if (l.customData) {
-        try {
-          const parsed = JSON.parse(l.customData);
-          customVals = customKeysArray.map(k => parsed[k] || '');
-        } catch (e) {}
-      }
-      return [l.email, l.name || '', l.phone || '', l.sourceUrl || '', l.createdAt.toISOString(), ...customVals];
-    })
-  ].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
 
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename=leads.csv');
-  res.send(csv);
-});
+  res.send(buildLeadCsv(leads));
+}));
 
 module.exports = router;

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import client, { EMBED_URL } from '../api/client';
 
 export default function Popups() {
   const [popups, setPopups] = useState([]);
@@ -13,43 +14,28 @@ export default function Popups() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  useEffect(() => {
-    fetchPopups();
-  }, []);
-
-  const fetchPopups = async () => {
+  async function fetchPopups() {
     try {
-      const workspaceId = localStorage.getItem('workspaceId') || 'test-workspace';
-      const res = await fetch(`http://localhost:4000/api/popups?workspaceId=${workspaceId}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      if (res.ok) {
-        setPopups(await res.json());
-      }
+      const workspaceId = localStorage.getItem('workspaceId');
+      const { data } = await client.get('/popups', { params: { workspaceId } });
+      setPopups(data);
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    queueMicrotask(fetchPopups);
+  }, []);
 
   const updateStatus = async (popupId, newStatus) => {
     try {
-      const res = await fetch(`http://localhost:4000/api/popups/${popupId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-      if (res.ok) {
+      await client.patch(`/popups/${popupId}/status`, { status: newStatus });
         fetchPopups();
         const labels = { ACTIVE: 'activated', PAUSED: 'paused', ARCHIVED: 'archived', DRAFT: 'set to draft' };
         showToast(`Popup ${labels[newStatus] || 'updated'} successfully!`);
-      } else {
-        showToast('Failed to update popup status.', 'error');
-      }
     } catch (e) {
       console.error(e);
       showToast('Network error.', 'error');
@@ -61,7 +47,7 @@ export default function Popups() {
   const toggleActive = (popup) => updateStatus(popup.id, popup.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE');
 
   const getEmbedCode = (popupId) => {
-    return `<script src="http://localhost:4000/embed/poplayer.iife.js" data-popup-id="${popupId}"></script>`;
+    return `<script src="${EMBED_URL}" data-popup-id="${popupId}"></script>`;
   };
 
   const copyEmbedCode = (popupId) => {

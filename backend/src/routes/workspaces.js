@@ -1,46 +1,69 @@
 const router = require('express').Router();
 const auth = require('../middleware/auth');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
+const { asyncHandler } = require('../lib/http');
+const { getAccessibleWorkspace, requireWorkspaceAdmin } = require('../lib/authz');
+const { requireString, optionalString, validateEmail } = require('../lib/validators');
 
 router.use(auth);
 
-// GET /api/workspaces
-router.get('/', async (req, res) => {
+router.get('/', asyncHandler(async (req, res) => {
   const workspaces = await prisma.workspace.findMany({
-    where: { userId: req.user.userId }
+    where: {
+      OR: [
+        { userId: req.user.userId },
+        { members: { some: { userId: req.user.userId } } },
+      ],
+    },
   });
   res.json(workspaces);
-});
+}));
 
-// POST /api/workspaces
-router.post('/', async (req, res) => {
-  const { name, domain } = req.body;
+router.post('/', asyncHandler(async (req, res) => {
+  const name = requireString(req.body.name, 'Workspace name', 120);
+  const domain = optionalString(req.body.domain, 255);
   const workspace = await prisma.workspace.create({
-    data: { name, domain, userId: req.user.userId }
+    data: {
+      name,
+      domain,
+      userId: req.user.userId,
+      members: {
+        create: { userId: req.user.userId, role: 'ADMIN' },
+      },
+    },
   });
-  res.json(workspace);
-});
+  res.status(201).json(workspace);
+}));
 
-router.get('/:id/members', auth, async (req, res) => {
+router.get('/:id/members', asyncHandler(async (req, res) => {
+  await getAccessibleWorkspace(req.user.userId, req.params.id);
   const members = await prisma.workspaceMember.findMany({
-    where: { workspaceId: req.params.id }
+    where: { workspaceId: req.params.id },
+    orderBy: { createdAt: 'asc' },
   });
   res.json(members);
-});
+}));
 
-router.post('/:id/members', auth, async (req, res) => {
-  const { email, role } = req.body;
-  // In a real app, we'd lookup the user by email, or create an invite.
-  // For MVP, we'll just mock the userId.
-  const member = await prisma.workspaceMember.create({
-    data: {
+router.post('/:id/members', asyncHandler(async (req, res) => {
+  await requireWorkspaceAdmin(req.user.userId, req.params.id);
+  const email = validateEmail(req.body.email);
+  const role = req.body.role === 'ADMIN' ? 'ADMIN' : 'MEMBER';
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    return res.status(404).json({ error: 'User must sign up before they can be added' });
+  }
+
+  const member = await prisma.workspaceMember.upsert({
+    where: { workspaceId_userId: { workspaceId: req.params.id, userId: user.id } },
+    update: { role },
+    create: {
       workspaceId: req.params.id,
-      userId: email, // mocking userId as email
-      role: role || 'MEMBER'
-    }
+      userId: user.id,
+      role,
+    },
   });
-  res.json(member);
-});
+  res.status(201).json(member);
+}));
 
 module.exports = router;

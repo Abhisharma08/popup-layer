@@ -1,51 +1,40 @@
 import { useState, useEffect } from 'react';
+import client from '../api/client';
 
 export default function Settings() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchMembers();
-  }, []);
-
-  const fetchMembers = async () => {
+  async function fetchMembers() {
     try {
-      const workspaceId = localStorage.getItem('workspaceId') || 'test-workspace';
-      const res = await fetch(`http://localhost:4000/api/workspaces/${workspaceId}/members`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      if (res.ok) {
-        setMembers(await res.json());
-      }
+      const workspaceId = localStorage.getItem('workspaceId');
+      const { data } = await client.get(`/workspaces/${workspaceId}/members`);
+      setMembers(data);
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    queueMicrotask(fetchMembers);
+  }, []);
 
   const handleInvite = async (e) => {
     e.preventDefault();
     if (!email) return;
+    setError('');
     try {
-      const workspaceId = localStorage.getItem('workspaceId') || 'test-workspace';
-      const res = await fetch(`http://localhost:4000/api/workspaces/${workspaceId}/members`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}` 
-        },
-        body: JSON.stringify({ email, role: 'MEMBER' })
-      });
-      if (res.ok) {
-        setEmail('');
-        fetchMembers();
-      } else {
-        alert('Failed to invite member');
-      }
+      const workspaceId = localStorage.getItem('workspaceId');
+      await client.post(`/workspaces/${workspaceId}/members`, { email, role: 'MEMBER' });
+      setEmail('');
+      fetchMembers();
     } catch (error) {
       console.error(error);
+      setError(error.response?.data?.error || 'Failed to add member');
     }
   };
 
@@ -72,9 +61,14 @@ export default function Settings() {
               required
             />
             <button type="submit" className="bg-indigo-600 text-white px-6 py-2 rounded font-medium hover:bg-indigo-700">
-              Invite
+              Add
             </button>
           </form>
+          {error && (
+            <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
           <div className="border rounded-lg overflow-hidden">
             <table className="w-full text-left text-sm">

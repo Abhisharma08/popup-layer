@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import client from '../api/client';
 
 export default function Signup() {
   const [email, setEmail] = useState('');
@@ -18,24 +19,13 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:4000/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, workspaceName })
-      });
-      
-      const data = await res.json();
-      
-      if (res.ok) {
-        login(data.user, data.token);
-        localStorage.setItem('workspaceId', data.workspaceId);
-        localStorage.setItem('siteId', data.siteId);
-        navigate('/dashboard');
-      } else {
-        setError(data.error || 'Signup failed');
-      }
+      const { data } = await client.post('/auth/signup', { email, password, workspaceName });
+      login(data.user, data.token);
+      localStorage.setItem('workspaceId', data.workspaceId);
+      localStorage.setItem('siteId', data.siteId);
+      navigate('/dashboard');
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err.response?.data?.error || 'Network error. Please try again.');
     } finally {
       setLoading(false);
     }

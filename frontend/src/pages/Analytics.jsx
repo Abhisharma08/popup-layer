@@ -1,29 +1,26 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import client from '../api/client';
 
 export default function Analytics() {
   const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
+  async function fetchStats() {
     try {
-      const workspaceId = localStorage.getItem('workspaceId') || 'test-workspace';
-      const res = await fetch(`http://localhost:4000/api/analytics?workspaceId=${workspaceId}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      if (res.ok) {
-        setStats(await res.json());
-      }
+      const workspaceId = localStorage.getItem('workspaceId');
+      const { data } = await client.get('/analytics', { params: { workspaceId } });
+      setStats(data);
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    queueMicrotask(fetchStats);
+  }, []);
 
   if (loading) return <div className="p-8">Loading analytics...</div>;
 

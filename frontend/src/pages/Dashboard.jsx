@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import client, { EMBED_URL } from '../api/client';
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ popups: 0, views: 0, leads: 0 });
@@ -7,45 +8,38 @@ export default function Dashboard() {
   
   const siteId = localStorage.getItem('siteId') || 'YOUR_SITE_ID';
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
+  async function fetchDashboardData() {
     try {
       const workspaceId = localStorage.getItem('workspaceId');
-      const [popupsRes, analyticsRes, leadsRes] = await Promise.all([
-        fetch(`http://localhost:4000/api/popups?workspaceId=${workspaceId}`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        }),
-        fetch(`http://localhost:4000/api/analytics?workspaceId=${workspaceId}`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        }),
-        // A quick hack for total leads: fetch all popups then their leads, or just sum up submits from analytics
+      const [popupsRes, analyticsRes] = await Promise.all([
+        client.get('/popups', { params: { workspaceId } }),
+        client.get('/analytics', { params: { workspaceId } }),
       ]);
 
-      if (popupsRes.ok && analyticsRes.ok) {
-        const popups = await popupsRes.json();
-        const analytics = await analyticsRes.json();
-        
-        const totalViews = analytics.reduce((acc, curr) => acc + curr.views, 0);
-        const totalSubmits = analytics.reduce((acc, curr) => acc + curr.submits, 0);
+      const popups = popupsRes.data;
+      const analytics = analyticsRes.data;
+      
+      const totalViews = analytics.reduce((acc, curr) => acc + curr.views, 0);
+      const totalSubmits = analytics.reduce((acc, curr) => acc + curr.submits, 0);
 
-        setStats({
-          popups: popups.filter(p => p.status === 'ACTIVE').length,
-          views: totalViews,
-          leads: totalSubmits
-        });
-      }
+      setStats({
+        popups: popups.filter(p => p.status === 'ACTIVE').length,
+        views: totalViews,
+        leads: totalSubmits
+      });
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    queueMicrotask(fetchDashboardData);
+  }, []);
 
   const copyScript = () => {
-    const script = `<script src="http://localhost:5173/dist/poplayer.iife.js" data-site-id="${siteId}"></script>`;
+    const script = `<script src="${EMBED_URL}" data-site-id="${siteId}"></script>`;
     navigator.clipboard.writeText(script);
     alert('Embed script copied to clipboard!');
   };
@@ -82,7 +76,7 @@ export default function Dashboard() {
           
           <div className="flex items-center gap-3 bg-gray-900 rounded-lg p-1 pr-3 shadow-inner">
             <code className="flex-1 px-4 py-3 text-sm text-green-400 font-mono overflow-x-auto whitespace-nowrap">
-              &lt;script src="http://localhost:5173/dist/poplayer.iife.js" data-site-id="{siteId}"&gt;&lt;/script&gt;
+              {`<script src="${EMBED_URL}" data-site-id="${siteId}"></script>`}
             </code>
             <button 
               onClick={copyScript}

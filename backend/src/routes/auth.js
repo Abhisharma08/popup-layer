@@ -1,13 +1,34 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const rateLimit = require('express-rate-limit');
+const prisma = require('../lib/prisma');
+const { asyncHandler } = require('../lib/http');
+const { validateEmail, requireString, optionalString } = require('../lib/validators');
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.use(authLimiter);
+
+function signToken(userId) {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is required');
+  }
+  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+}
 
 // POST /api/auth/signup
-router.post('/signup', async (req, res) => {
-  try {
-    const { email, password, workspaceName } = req.body;
+router.post('/signup', asyncHandler(async (req, res) => {
+    const email = validateEmail(req.body.email);
+    const password = requireString(req.body.password, 'Password', 128);
+    const workspaceName = optionalString(req.body.workspaceName, 120);
+    if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) return res.status(400).json({ error: 'Email already in use' });
 
@@ -29,23 +50,19 @@ router.post('/signup', async (req, res) => {
       data: { workspaceId: workspace.id, userId: user.id, role: 'ADMIN' }
     });
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = signToken(user.id);
     res.json({
       token,
       user: { id: user.id, email: user.email, name: user.name },
       workspaceId: workspace.id,
       siteId: workspace.siteId
     });
-  } catch (err) {
-    console.error('Signup error:', err);
-    res.status(500).json({ error: 'Signup failed' });
-  }
-});
+}));
 
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
+router.post('/login', asyncHandler(async (req, res) => {
+    const email = validateEmail(req.body.email);
+    const password = requireString(req.body.password, 'Password', 128);
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return res.status(400).json({ error: 'Invalid credentials' });
 
@@ -68,17 +85,13 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = signToken(user.id);
     res.json({
       token,
       user: { id: user.id, email: user.email, name: user.name },
       workspaceId: workspace.id,
       siteId: workspace.siteId
     });
-  } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ error: 'Login failed' });
-  }
-});
+}));
 
 module.exports = router;
