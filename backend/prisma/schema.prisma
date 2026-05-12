@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String      @id @default(uuid())
+  email        String      @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime    @default(now())
+  workspaces   Workspace[]
+}
+
+model Workspace {
+  id        String   @id @default(uuid())
+  userId    String   // Owner
+  user      User     @relation(fields: [userId], references: [id])
+  name      String
+  siteId    String   @unique @default(cuid())
+  domain    String?
+  createdAt DateTime @default(now())
+  popups    Popup[]
+  members   WorkspaceMember[]
+}
+
+model WorkspaceMember {
+  id          String    @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  role        String    @default("MEMBER") // ADMIN, MEMBER
+  createdAt   DateTime  @default(now())
+
+  @@unique([workspaceId, userId])
+}
+
+model Popup {
+  id            String      @id @default(uuid())
+  workspaceId   String
+  workspace     Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name          String
+  type          String      // EMAIL_CAPTURE, ANNOUNCEMENT, EXIT_INTENT, COUPON
+  status        String      @default("DRAFT") // DRAFT, ACTIVE, PAUSED
+  config        String      // JSON stringified config (Variant A)
+  triggers      String      // JSON stringified triggers (Variant A)
+  webhookUrl    String?     // URL to POST leads to
+  abTestEnabled Boolean     @default(false)
+  configB       String?     // JSON stringified config (Variant B)
+  triggersB     String?     // JSON stringified triggers (Variant B)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  leads         Lead[]
+  events        AnalyticsEvent[]
+}
+
+model Lead {
+  id        String   @id @default(uuid())
+  popupId   String
+  popup     Popup    @relation(fields: [popupId], references: [id], onDelete: Cascade)
+  email     String
+  name      String?
+  phone     String?
+  sourceUrl String?
+  customData String? // JSON string of custom form fields
+  variant   String   @default("A") // "A" or "B"
+  createdAt DateTime @default(now())
+
+  @@unique([popupId, email])
+}
+
+model AnalyticsEvent {
+  id        String     @id @default(uuid())
+  popupId   String
+  popup     Popup      @relation(fields: [popupId], references: [id], onDelete: Cascade)
+  event     String     // VIEW, SUBMIT, CLOSE
+  variant   String     @default("A") // "A" or "B"
+  createdAt DateTime   @default(now())
+}
