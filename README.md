@@ -54,6 +54,27 @@ npm run build
 
 ## Production Deployment
 
+### Docker on a VPS (recommended)
+
+1. Copy `.env.example` to `.env` at the repo root and fill values.
+
+2. Build + run:
+
+```bash
+docker compose up -d --build
+```
+
+3. Open:
+
+- Dashboard: `http://<your-vps-ip>:8080`
+- API health: `http://<your-vps-ip>:4000/health`
+- Embed script: `http://<your-vps-ip>:4000/embed/poplayer.iife.js`
+
+For real production, put a reverse proxy (Nginx/Caddy/Traefik) in front with HTTPS and map:
+
+- `app.yourdomain.com` → `web:80`
+- `api.yourdomain.com` → `api:4000`
+
 Set these backend environment variables:
 
 - `DATABASE_URL`: PostgreSQL connection string.

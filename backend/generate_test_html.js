@@ -28,7 +28,7 @@ async function main() {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PopLayer E2E Test</title>
     <!-- PopLayer Embed -->
-    <script src="http://localhost:4000/embed/poplayer.iife.js" data-popup-id="0882422c-a322-4647-bcf0-9f8df0a848c7"></script>
+    
 
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.5; padding: 2rem; max-width: 800px; margin: 0 auto; background: #f9fafb; color: #111827; }
