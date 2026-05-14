@@ -24,6 +24,9 @@ function signToken(userId) {
 
 // POST /api/auth/signup
 router.post('/signup', asyncHandler(async (req, res) => {
+    if (process.env.ALLOW_SIGNUP !== 'true') {
+        return res.status(403).json({ error: 'Public sign-up is disabled on this instance.' });
+    }
     const email = validateEmail(req.body.email);
     const password = requireString(req.body.password, 'Password', 128);
     const workspaceName = optionalString(req.body.workspaceName, 120);

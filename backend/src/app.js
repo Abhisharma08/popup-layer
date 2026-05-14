@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 
 const prisma = require('./lib/prisma');
 const { errorHandler } = require('./lib/http');
@@ -20,6 +21,22 @@ function createApp() {
     credentials: true,
   };
   app.use(cors(corsOptions));
+
+  // Rate Limiting
+  const globalLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 100,
+    message: { error: 'Too many requests, please try again later.' }
+  });
+  const leadLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 5,
+    message: { error: 'Too many lead submissions, please slow down.' }
+  });
+
+  app.use(globalLimiter);
+  app.use('/api/leads', leadLimiter);
+
   app.use(express.json({ limit: '1mb' }));
   app.use(requestLogger);
 
