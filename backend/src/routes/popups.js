@@ -91,11 +91,10 @@ router.patch('/:id/status', asyncHandler(async (req, res) => {
 router.delete('/:id', asyncHandler(async (req, res) => {
   await getAccessiblePopup(req.user.userId, req.params.id);
 
-  const popup = await prisma.popup.update({
-    where: { id: req.params.id },
-    data: { status: 'ARCHIVED' },
+  await prisma.popup.delete({
+    where: { id: req.params.id }
   });
-  res.json({ success: true, popup });
+  res.json({ success: true });
 }));
 
 module.exports = router;

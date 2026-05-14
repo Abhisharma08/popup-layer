@@ -46,6 +46,18 @@ export default function Popups() {
   const unarchivePopup = (popupId) => updateStatus(popupId, 'DRAFT');
   const toggleActive = (popup) => updateStatus(popup.id, popup.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE');
 
+  const deletePopup = async (popupId) => {
+    if (!window.confirm('Are you sure you want to permanently delete this popup? This cannot be undone.')) return;
+    try {
+      await client.delete(`/popups/${popupId}`);
+      fetchPopups();
+      showToast('Popup deleted permanently.');
+    } catch (e) {
+      console.error(e);
+      showToast('Failed to delete popup.', 'error');
+    }
+  };
+
   const getEmbedCode = (popupId) => {
     return `<script src="${EMBED_URL}" data-api-url="${API_URL}" data-popup-id="${popupId}"></script>`;
   };
@@ -165,6 +177,15 @@ export default function Popups() {
                       className="text-sm font-medium text-green-600 hover:text-green-800 transition-colors"
                     >
                       Unarchive
+                    </button>
+                  )}
+
+                  {tab === 'archived' && (
+                    <button 
+                      onClick={() => deletePopup(popup.id)}
+                      className="text-sm font-medium text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      Delete
                     </button>
                   )}
                 </div>
