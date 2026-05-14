@@ -62,6 +62,24 @@ export function getStyles(id, config) {
     #poplayer-overlay-${id} .poplayer-success {
       text-align: center; padding: 2rem; font-size: 1.1rem; font-weight: 600;
     }
+
+    @media (max-width: 640px) {
+      #poplayer-overlay-${id} .poplayer-box.side-by-side {
+        flex-direction: column;
+        max-width: 400px;
+      }
+      #poplayer-overlay-${id} .poplayer-image {
+        min-height: 160px;
+        max-height: 200px;
+      }
+      #poplayer-overlay-${id} .poplayer-headline {
+        font-size: 1.25rem;
+      }
+      #poplayer-overlay-${id} .poplayer-content {
+        padding: 1.5rem;
+      }
+    }
+
     @keyframes plFadeIn {
       from { opacity: 0; transform: scale(0.95); }
       to   { opacity: 1; transform: scale(1); }
