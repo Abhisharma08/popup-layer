@@ -6,6 +6,17 @@ export function setApiBase(value) {
   }
 }
 
+/** When the script is served from the same host as the API (e.g. /embed/*.js → /api), avoid localhost baked into the bundle. */
+export function inferApiBaseFromScript(script) {
+  if (!script?.src) return null;
+  try {
+    const u = new URL(script.src);
+    return `${u.origin}/api`;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchPopups(siteId) {
   try {
     const res = await fetch(`${apiBase}/embed/${siteId}`);

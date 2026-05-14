@@ -1,4 +1,4 @@
-import { fetchPopups, fetchPopupById, setApiBase } from './loader';
+import { fetchPopups, fetchPopupById, setApiBase, inferApiBaseFromScript } from './loader';
 import { evaluateTriggers } from './triggers';
 import { renderPopup } from './renderer';
 
@@ -12,7 +12,7 @@ import { renderPopup } from './renderer';
   const apiUrl = script?.getAttribute('data-api-url');
 
   if (!popupId && !siteId) return;
-  setApiBase(apiUrl);
+  setApiBase(apiUrl || inferApiBaseFromScript(script));
 
   // Fetch popup(s) — either a single popup or all workspace popups
   let result;
