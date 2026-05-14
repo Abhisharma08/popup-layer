@@ -3,12 +3,19 @@ const prisma = require('../lib/prisma');
 const { asyncHandler } = require('../lib/http');
 
 function serializePopup(popup) {
+  const parseSafe = (val) => {
+    if (typeof val === 'string') {
+      try { return JSON.parse(val); } catch (e) { return val; }
+    }
+    return val;
+  };
+
   return {
     ...popup,
-    config: JSON.parse(popup.config),
-    triggers: JSON.parse(popup.triggers),
-    configB: popup.configB ? JSON.parse(popup.configB) : null,
-    triggersB: popup.triggersB ? JSON.parse(popup.triggersB) : null,
+    config: parseSafe(popup.config),
+    triggers: parseSafe(popup.triggers),
+    configB: popup.configB ? parseSafe(popup.configB) : null,
+    triggersB: popup.triggersB ? parseSafe(popup.triggersB) : null,
   };
 }
 
