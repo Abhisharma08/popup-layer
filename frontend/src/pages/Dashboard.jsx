@@ -66,27 +66,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Embed Script Section */}
-      <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-8 relative overflow-hidden">
-        <div className="relative z-10">
-          <h2 className="text-xl font-bold text-indigo-900 mb-2">Install PopLayer</h2>
-          <p className="text-indigo-700 mb-6 max-w-2xl">
-            Copy and paste this snippet right before the closing <code className="bg-indigo-100 px-1 rounded">&lt;/head&gt;</code> tag of your website. Your popups will automatically go live.
-          </p>
-          
-          <div className="flex items-center gap-3 bg-gray-900 rounded-lg p-1 pr-3 shadow-inner">
-            <code className="flex-1 px-4 py-3 text-sm text-green-400 font-mono overflow-x-auto whitespace-nowrap">
-              {`<script src="${EMBED_URL}" data-site-id="${siteId}"></script>`}
-            </code>
-            <button 
-              onClick={copyScript}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors shrink-0"
-            >
-              Copy Code
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* Quick Actions */}
       <div className="flex gap-4">
