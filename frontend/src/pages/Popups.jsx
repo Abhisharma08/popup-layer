@@ -47,7 +47,7 @@ export default function Popups() {
   const toggleActive = (popup) => updateStatus(popup.id, popup.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE');
 
   const getEmbedCode = (popupId) => {
-    return `<script src="${EMBED_URL}" data-popup-id="${popupId}"></script>`;
+    return `<script src="${EMBED_URL}" data-api-url="${API_URL}" data-popup-id="${popupId}"></script>`;
   };
 
   const copyEmbedCode = (popupId) => {
