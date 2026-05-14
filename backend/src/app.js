@@ -15,20 +15,11 @@ const embedRoutes = require('./routes/embed');
 function createApp() {
   const app = express();
 
-  const allowedOrigins = (process.env.FRONTEND_URL || '')
-    .split(',')
-    .map(origin => origin.trim())
-    .filter(Boolean);
-
-  app.use(cors({
-    origin(origin, callback) {
-      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error('Not allowed by CORS'));
-    },
+  const corsOptions = {
+    origin: true, // Reflect request origin
     credentials: true,
-  }));
+  };
+  app.use(cors(corsOptions));
   app.use(express.json({ limit: '1mb' }));
   app.use(requestLogger);
 
