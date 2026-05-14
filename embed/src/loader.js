@@ -1,4 +1,9 @@
-let apiBase = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+let apiBase = import.meta.env.VITE_API_URL || '';
+
+// Fallback if not baked in during build
+if (!apiBase && typeof window !== 'undefined') {
+  apiBase = `${window.location.origin}/api`;
+}
 
 export function setApiBase(value) {
   if (value && /^https?:\/\//i.test(value)) {

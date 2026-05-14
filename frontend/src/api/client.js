@@ -1,7 +1,19 @@
 import axios from 'axios';
 
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-export const EMBED_URL = import.meta.env.VITE_EMBED_URL || 'http://localhost:4000/embed/poplayer.iife.js';
+const getBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  // Fallback to current domain if env var is missing
+  return `${window.location.origin}/api`;
+};
+
+const getEmbedUrl = () => {
+  if (import.meta.env.VITE_EMBED_URL) return import.meta.env.VITE_EMBED_URL;
+  // Fallback to current domain if env var is missing
+  return `${window.location.origin}/embed/poplayer.iife.js`;
+};
+
+export const API_URL = getBaseUrl();
+export const EMBED_URL = getEmbedUrl();
 
 const client = axios.create({
   baseURL: API_URL,
