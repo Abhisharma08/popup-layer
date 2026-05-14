@@ -12,14 +12,28 @@ export function getStyles(id, config) {
     #poplayer-overlay-${id} .poplayer-box {
       background: ${bgColor}; color: ${textColor};
       border-radius: ${borderRadius}px;
-      padding: 2rem; width: 90%; max-width: 440px;
+      width: 90%; max-width: 440px;
       position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.3);
       animation: plFadeIn 0.3s ease;
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    #poplayer-overlay-${id} .poplayer-box.side-by-side {
+      flex-direction: row; max-width: 700px;
+    }
+    #poplayer-overlay-${id} .poplayer-content {
+      padding: 2rem; flex: 1; position: relative;
+    }
+    #poplayer-overlay-${id} .poplayer-image {
+      flex: 1; overflow: hidden; min-height: 200px;
+    }
+    #poplayer-overlay-${id} .poplayer-image img {
+      width: 100%; height: 100%; object-cover: cover;
+      display: block; min-height: 100%;
     }
     #poplayer-overlay-${id} .poplayer-close {
       position: absolute; top: 12px; right: 16px;
       background: none; border: none; font-size: 1.5rem;
-      cursor: pointer; color: #999; line-height: 1;
+      cursor: pointer; color: #999; line-height: 1; z-index: 10;
     }
     #poplayer-overlay-${id} .poplayer-headline {
       font-size: 1.5rem; font-weight: 700; margin: 0 0 0.5rem;

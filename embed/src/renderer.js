@@ -1,4 +1,4 @@
-import { submitLead, trackEvent } from './loader';
+import { submitLead, trackEvent, apiBase } from './loader';
 import { getStyles } from './styles';
 
 function escapeHtml(value) {
@@ -78,13 +78,6 @@ function buildHTML(id, config, type) {
   const fields = config.fields || [];
 
   const fieldHTML = fields.map(field => {
-    if (typeof field === 'string') {
-      if (field === 'email') return '<input class="poplayer-input" type="email" name="email" placeholder="Your email" required />';
-      if (field === 'name') return '<input class="poplayer-input" type="text" name="name" placeholder="Your name" />';
-      if (field === 'phone') return '<input class="poplayer-input" type="tel" name="phone" placeholder="Phone number" />';
-      return '';
-    }
-
     const reqAttr = field.required ? 'required' : '';
     const placeholder = escapeHtml(field.placeholder || field.label || '');
     const name = safeFieldName(field.id || field.label || '');
@@ -92,9 +85,6 @@ function buildHTML(id, config, type) {
 
     if (field.type === 'textarea') {
       return `<textarea class="poplayer-input" name="${name}" placeholder="${placeholder}" rows="2" ${reqAttr}></textarea>`;
-    }
-    if (field.type === 'select') {
-      return `<select class="poplayer-input" name="${name}" ${reqAttr}><option value="">${placeholder}</option></select>`;
     }
     return `<input class="poplayer-input" type="${typeAttr}" name="${name}" placeholder="${placeholder}" ${reqAttr} />`;
   }).join('');
@@ -107,13 +97,35 @@ function buildHTML(id, config, type) {
     ? `<form class="poplayer-form">${fieldHTML}<button type="submit" class="poplayer-btn">${escapeHtml(config.ctaText || 'Submit')}</button></form>`
     : `<button class="poplayer-btn poplayer-close">${escapeHtml(config.ctaText || 'Got it')}</button>`;
 
-  return `
-    <div class="poplayer-box" id="poplayer-box-${id}">
+  const getFullImageUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    // Prefix relative paths with the API domain
+    const base = apiBase.replace(/\/api$/, '');
+    return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
+  const isSideBySide = config.layout === 'side-by-side' && config.imageUrl;
+  
+  const imageHTML = config.imageUrl 
+    ? `<div class="poplayer-image"><img src="${getFullImageUrl(config.imageUrl)}" alt="Popup" /></div>`
+    : '';
+
+  const textContent = `
+    <div class="poplayer-content">
       ${config.closeButton !== false ? '<button class="poplayer-close">&times;</button>' : ''}
       <h2 class="poplayer-headline">${escapeHtml(config.headline || '')}</h2>
       <p class="poplayer-subtext">${escapeHtml(config.subtext || '')}</p>
       ${couponHTML}
       ${formHTML}
+    </div>
+  `;
+
+  return `
+    <div class="poplayer-box ${isSideBySide ? 'side-by-side' : ''}" id="poplayer-box-${id}">
+      ${isSideBySide && config.imageSide === 'left' ? imageHTML : ''}
+      ${textContent}
+      ${isSideBySide && config.imageSide === 'right' ? imageHTML : ''}
     </div>
   `;
 }
