@@ -36,12 +36,6 @@ export function renderPopup(popup) {
     trackEvent(id, 'CLOSE', popup.variant);
   });
 
-  overlay.addEventListener('click', (event) => {
-    if (event.target === overlay) {
-      overlay.remove();
-      trackEvent(id, 'CLOSE', popup.variant);
-    }
-  });
 
   overlay.querySelector('.poplayer-form')?.addEventListener('submit', async (event) => {
     event.preventDefault();
