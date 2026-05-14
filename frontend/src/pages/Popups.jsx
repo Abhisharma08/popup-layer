@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import client, { EMBED_URL } from '../api/client';
+import client, { EMBED_URL, API_URL } from '../api/client';
 
 export default function Popups() {
   const [popups, setPopups] = useState([]);
