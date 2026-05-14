@@ -18,6 +18,7 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+      args:
         VITE_API_URL: ${VITE_API_URL:?set in .env}
     environment:
       NODE_ENV: production
@@ -38,6 +39,7 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      args:
         VITE_API_URL: ${VITE_API_URL:?set in .env}
         VITE_EMBED_URL: ${VITE_EMBED_URL:?set in .env}
     depends_on:
