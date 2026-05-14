@@ -15,6 +15,8 @@ const getEmbedUrl = () => {
 export const API_URL = getBaseUrl();
 export const EMBED_URL = getEmbedUrl();
 
+console.log('PopLayer Dashboard initialized with:', { API_URL, EMBED_URL, origin: window.location.origin });
+
 const client = axios.create({
   baseURL: API_URL,
 });

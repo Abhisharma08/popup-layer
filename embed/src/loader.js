@@ -8,6 +8,7 @@ if (!apiBase && typeof window !== 'undefined') {
 export function setApiBase(value) {
   if (value && /^https?:\/\//i.test(value)) {
     apiBase = value.replace(/\/$/, '');
+    console.log('PopLayer: API Base set to', apiBase);
   }
 }
 
