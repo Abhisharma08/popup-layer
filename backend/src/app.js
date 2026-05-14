@@ -41,6 +41,8 @@ function createApp() {
   app.use(requestLogger);
 
   app.use('/embed', express.static(path.join(__dirname, '../../embed/dist')));
+  app.use('/images', express.static(path.join(__dirname, '../public/images')));
+  app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
   app.get('/health', async (req, res, next) => {
     try {

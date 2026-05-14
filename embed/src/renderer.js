@@ -100,8 +100,9 @@ function buildHTML(id, config, type) {
   const getFullImageUrl = (url) => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
+    
     // Prefix relative paths with the API domain
-    const base = apiBase.replace(/\/api$/, '');
+    const base = apiBase.replace(/\/api$/, '').replace(/\/$/, '');
     return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
