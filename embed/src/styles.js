@@ -5,7 +5,8 @@ export function getStyles(id, config) {
   return `
     #poplayer-overlay-${id} {
       position: fixed; inset: 0; z-index: 999999;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(4px);
       display: flex; align-items: center; justify-content: center;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
