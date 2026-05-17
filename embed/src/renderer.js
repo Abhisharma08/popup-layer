@@ -74,6 +74,7 @@ export function renderPopup(popup) {
 
 function buildHTML(id, config, type) {
   const fields = config.fields || [];
+  const hiddenFields = config.hiddenFields || [];
 
   const fieldHTML = fields.map(field => {
     const reqAttr = field.required ? 'required' : '';
@@ -103,13 +104,18 @@ function buildHTML(id, config, type) {
     }
     return `<input class="poplayer-input" type="${typeAttr}" name="${name}" placeholder="${placeholder}" ${reqAttr} />`;
   }).join('');
+  const hiddenFieldHTML = hiddenFields.map(field => {
+    const name = safeFieldName(field.id || field.label || '');
+    if (!name) return '';
+    return `<input type="hidden" name="${name}" value="${escapeHtml(field.value || '')}" />`;
+  }).join('');
 
   const couponHTML = config.showCouponCode && config.couponCode
     ? `<div class="poplayer-coupon">${escapeHtml(config.couponCode)}</div>`
     : '';
 
   const formHTML = type !== 'ANNOUNCEMENT'
-    ? `<form class="poplayer-form">${fieldHTML}<button type="submit" class="poplayer-btn">${escapeHtml(config.ctaText || 'Submit')}</button></form>`
+    ? `<form class="poplayer-form">${fieldHTML}${hiddenFieldHTML}<button type="submit" class="poplayer-btn">${escapeHtml(config.ctaText || 'Submit')}</button></form>`
     : `<button class="poplayer-btn poplayer-close">${escapeHtml(config.ctaText || 'Got it')}</button>`;
 
   const getFullImageUrl = (url) => {

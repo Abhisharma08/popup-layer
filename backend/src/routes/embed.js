@@ -10,11 +10,39 @@ function serializePopup(popup) {
     return val;
   };
 
+  const splitHiddenFields = (config) => {
+    if (!config || !Array.isArray(config.fields)) return config;
+
+    const isHiddenField = (field) => (
+      String(field?.type || '').toLowerCase() === 'hidden' || field?.hidden === true || field?.isHidden === true
+    );
+    const hiddenFields = config.fields
+      .filter(isHiddenField)
+      .map(field => ({
+        ...field,
+        type: 'hidden',
+        required: false,
+        placeholder: '',
+        options: undefined,
+        hidden: true,
+      }));
+    const visibleFields = config.fields.filter(field => !isHiddenField(field));
+
+    return {
+      ...config,
+      fields: visibleFields,
+      hiddenFields,
+    };
+  };
+
+  const config = splitHiddenFields(parseSafe(popup.config));
+  const configB = popup.configB ? splitHiddenFields(parseSafe(popup.configB)) : null;
+
   return {
     ...popup,
-    config: parseSafe(popup.config),
+    config,
     triggers: parseSafe(popup.triggers),
-    configB: popup.configB ? parseSafe(popup.configB) : null,
+    configB,
     triggersB: popup.triggersB ? parseSafe(popup.triggersB) : null,
   };
 }

@@ -58,13 +58,15 @@ export default function Popups() {
     }
   };
 
-  const getEmbedCode = (popupId) => {
-    return `<script src="${EMBED_URL}" data-api-url="${API_URL}" data-popup-id="${popupId}"></script>`;
+  const getEmbedCode = (popup) => {
+    const separator = EMBED_URL.includes('?') ? '&' : '?';
+    const version = popup.updatedAt ? new Date(popup.updatedAt).getTime() : Date.now();
+    return `<script src="${EMBED_URL}${separator}v=${version}" data-api-url="${API_URL}" data-popup-id="${popup.id}"></script>`;
   };
 
-  const copyEmbedCode = (popupId) => {
-    navigator.clipboard.writeText(getEmbedCode(popupId));
-    setCopiedId(popupId);
+  const copyEmbedCode = (popup) => {
+    navigator.clipboard.writeText(getEmbedCode(popup));
+    setCopiedId(popup.id);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -196,10 +198,10 @@ export default function Popups() {
                 <div className="px-5 pb-4">
                   <div className="flex items-center gap-2 bg-gray-900 rounded-lg p-1 pl-4">
                     <code className="flex-1 text-xs text-green-400 font-mono overflow-x-auto whitespace-nowrap py-2">
-                      {getEmbedCode(popup.id)}
+                      {getEmbedCode(popup)}
                     </code>
                     <button 
-                      onClick={() => copyEmbedCode(popup.id)}
+                      onClick={() => copyEmbedCode(popup)}
                       className={`shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                         copiedId === popup.id 
                           ? 'bg-green-600 text-white' 
