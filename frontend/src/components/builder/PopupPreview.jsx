@@ -12,11 +12,14 @@ export default function PopupPreview({ config, type }) {
   };
 
   const btnTextColor = isAccentDark(accentColor) ? '#ffffff' : '#000000';
+  const isHiddenField = (field) => (
+    String(field?.type || '').toLowerCase() === 'hidden' || field?.hidden === true || field?.isHidden === true
+  );
 
   const renderField = (field) => {
     const baseClasses = "w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm outline-none";
 
-    if (field.type === 'hidden') return null;
+    if (isHiddenField(field)) return null;
     
     if (field.type === 'textarea') {
       return <textarea key={field.id} className={baseClasses} placeholder={field.placeholder || field.label} rows="2" readOnly />;
@@ -54,7 +57,7 @@ export default function PopupPreview({ config, type }) {
 
       {type !== 'ANNOUNCEMENT' && (
         <div className="space-y-3 mb-5">
-          {(fields || []).filter(field => field.type !== 'hidden').map(field => (
+          {(fields || []).filter(field => !isHiddenField(field)).map(field => (
             <div key={field.id}>{renderField(field)}</div>
           ))}
         </div>

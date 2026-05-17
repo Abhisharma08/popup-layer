@@ -25,6 +25,31 @@ function formatOptions(options) {
   return Array.isArray(options) ? options.join('\n') : '';
 }
 
+function isHiddenField(field) {
+  return String(field?.type || '').toLowerCase() === 'hidden' || field?.hidden === true || field?.isHidden === true;
+}
+
+function normalizeField(field) {
+  if (!field) return field;
+  if (!isHiddenField(field)) return field;
+
+  return {
+    ...field,
+    type: 'hidden',
+    required: false,
+    placeholder: '',
+    options: undefined,
+    hidden: true,
+  };
+}
+
+function normalizeConfig(config) {
+  return {
+    ...config,
+    fields: Array.isArray(config?.fields) ? config.fields.map(normalizeField) : [],
+  };
+}
+
 const TEMPLATES = [
   {
     name: "Newsletter Minimal",
@@ -159,11 +184,11 @@ export default function PopupBuilder() {
         workspaceId: localStorage.getItem('workspaceId'),
         name: popupName || 'My Popup',
         type: popupType,
-        config,
+        config: normalizeConfig(config),
         triggers,
         webhookUrl,
         abTestEnabled,
-        configB,
+        configB: configB ? normalizeConfig(configB) : null,
         triggersB
       };
       const response = isEditing
@@ -191,10 +216,11 @@ export default function PopupBuilder() {
       id,
       label: newFieldLabel,
       type: newFieldType,
-      placeholder: newFieldLabel,
+      placeholder: newFieldType === 'hidden' ? '' : newFieldLabel,
       required: false,
       options: newFieldType === 'select' ? ['Option 1', 'Option 2'] : undefined,
       value: newFieldType === 'hidden' ? '' : undefined,
+      hidden: newFieldType === 'hidden' ? true : undefined,
     });
     setNewFieldLabel('');
     setNewFieldType('text');
@@ -442,6 +468,7 @@ export default function PopupBuilder() {
                           onChange={e => updateField(field.id, { placeholder: e.target.value })}
                           className="w-full px-2 py-1 border rounded text-sm"
                           placeholder="Placeholder text"
+                          disabled={isHiddenField(field)}
                         />
                         <div className="flex items-center gap-3">
                           <select 
@@ -450,13 +477,16 @@ export default function PopupBuilder() {
                               type: e.target.value,
                               options: e.target.value === 'select' ? (field.options?.length ? field.options : ['Option 1', 'Option 2']) : undefined,
                               value: e.target.value === 'hidden' ? (field.value || '') : undefined,
-                              required: e.target.value === 'hidden' ? false : field.required
+                              required: e.target.value === 'hidden' ? false : field.required,
+                              placeholder: e.target.value === 'hidden' ? '' : field.placeholder,
+                              hidden: e.target.value === 'hidden' ? true : undefined,
+                              isHidden: undefined
                             })}
                             className="flex-1 px-2 py-1 border rounded text-sm bg-white"
                           >
                             {FIELD_TYPES.map(ft => <option key={ft.value} value={ft.value}>{ft.label}</option>)}
                           </select>
-                          {field.type !== 'hidden' && <label className="flex items-center gap-1 text-xs">
+                          {!isHiddenField(field) && <label className="flex items-center gap-1 text-xs">
                             <input 
                               type="checkbox" 
                               checked={field.required} 
@@ -478,7 +508,7 @@ export default function PopupBuilder() {
                             />
                           </div>
                         )}
-                        {field.type === 'hidden' && (
+                        {isHiddenField(field) && (
                           <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">Hidden Value</label>
                             <input
@@ -512,7 +542,7 @@ export default function PopupBuilder() {
                             <span className="text-sm font-medium">{field.label}</span>
                             <span className="text-xs text-gray-400 ml-2">{field.type}</span>
                             {field.type === 'select' && <span className="text-xs text-gray-400 ml-2">{field.options?.length || 0} options</span>}
-                            {field.type === 'hidden' && <span className="text-xs text-gray-400 ml-2">submits silently</span>}
+                            {isHiddenField(field) && <span className="text-xs text-gray-400 ml-2">submits silently</span>}
                             {field.required && <span className="text-red-400 ml-1 text-xs">*</span>}
                           </div>
                         </div>

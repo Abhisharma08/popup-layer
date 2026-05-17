@@ -14,6 +14,10 @@ function safeFieldName(value) {
   return String(value || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '');
 }
 
+function isHiddenField(field) {
+  return String(field?.type || '').toLowerCase() === 'hidden' || field?.hidden === true || field?.isHidden === true;
+}
+
 export function renderPopup(popup) {
   const { id, config } = popup;
 
@@ -79,7 +83,7 @@ function buildHTML(id, config, type) {
 
     if (!name) return '';
 
-    if (field.type === 'hidden') {
+    if (isHiddenField(field)) {
       return `<input type="hidden" name="${name}" value="${escapeHtml(field.value || '')}" />`;
     }
 
