@@ -15,12 +15,22 @@ export default function PopupPreview({ config, type }) {
 
   const renderField = (field) => {
     const baseClasses = "w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm outline-none";
+
+    if (field.type === 'hidden') return null;
     
     if (field.type === 'textarea') {
       return <textarea key={field.id} className={baseClasses} placeholder={field.placeholder || field.label} rows="2" readOnly />;
     }
     if (field.type === 'select') {
-      return <select key={field.id} className={`${baseClasses} bg-white`}><option>{field.placeholder || field.label}</option></select>;
+      const options = Array.isArray(field.options) && field.options.length > 0 ? field.options : [];
+      return (
+        <select key={field.id} className={`${baseClasses} bg-white`} defaultValue="">
+          <option value="" disabled>{field.placeholder || field.label}</option>
+          {options.map((option, index) => (
+            <option key={`${option}-${index}`} value={option}>{option}</option>
+          ))}
+        </select>
+      );
     }
     return <input key={field.id} className={baseClasses} type={field.type || 'text'} placeholder={field.placeholder || field.label} readOnly />;
   };
@@ -44,7 +54,7 @@ export default function PopupPreview({ config, type }) {
 
       {type !== 'ANNOUNCEMENT' && (
         <div className="space-y-3 mb-5">
-          {(fields || []).map(field => (
+          {(fields || []).filter(field => field.type !== 'hidden').map(field => (
             <div key={field.id}>{renderField(field)}</div>
           ))}
         </div>

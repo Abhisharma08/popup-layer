@@ -1,118 +1,109 @@
-# PopLayer
+# PopLayer 🚀
 
-PopLayer is a popup and lead-capture SaaS MVP with three packages:
+PopLayer is a powerful, enterprise-grade Popup & Lead Capture SaaS platform designed to help businesses convert visitors into customers. With a visual drag-and-drop builder, advanced triggering logic, and robust A/B testing, PopLayer provides everything you need to capture leads, announce sales, and reduce exit abandonment.
 
-- `backend`: Express API, Prisma, PostgreSQL.
-- `frontend`: React/Vite dashboard.
-- `embed`: Vite-built IIFE widget for customer sites.
+![PopLayer Dashboard](https://via.placeholder.com/1200x600/4F46E5/FFFFFF?text=PopLayer+SaaS+Platform+Dashboard)
 
-## Local Development
+## ✨ Core Features
 
-1. Start infrastructure:
+### 🎨 Visual Popup Builder
+*   **Drag-and-Drop Fields**: Support for Text, Email, Phone, Number, Textarea, and Dropdowns.
+*   **Premium Templates**: Choose from pre-built templates like Newsletter Signup, Exit Intent, Black Friday Sales, and more.
+*   **Side-by-Side Layouts**: Add high-quality imagery next to your forms for better conversion.
+*   **Live Preview**: Real-time visualization of your popup as you design it.
 
-```bash
-docker compose up -d
-```
+### ⚡ Smart Triggers & Logic
+*   **Exit Intent**: Catch users right before they leave your site.
+*   **Scroll-based**: Trigger popups when a user reaches a certain depth on your page.
+*   **Time Delay**: Show offers after a specific duration of engagement.
+*   **Frequency Control**: Set popups to show once per session, daily, or only once per user.
 
-2. Configure environment files from examples:
+### 🧪 Advanced Conversion Optimization
+*   **A/B Testing**: Create multiple variants (A/B) to test headlines, colors, and layouts. PopLayer automatically tracks which one performs better.
+*   **Webhook Integration**: Send lead data directly to Zapier, HubSpot, or your custom CRM via secure webhooks.
+*   **Detailed Analytics**: Monitor impressions, clicks, and conversion rates with beautiful charts.
 
-```bash
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
-cp embed/.env.example embed/.env
-```
+### 🛠️ Developer-First Integration
+*   **Lightweight Embed Script**: A single line of JavaScript integrates PopLayer with any website (WordPress, Shopify, Webflow, or custom HTML).
+*   **High Performance**: The embed widget is optimized for zero impact on your site's LCP (Largest Contentful Paint).
 
-3. Install dependencies in each package if needed:
+---
 
-```bash
-cd backend && npm install
-cd ../frontend && npm install
-cd ../embed && npm install
-```
+## 🏗️ Technical Architecture
 
-4. Prepare the database:
+PopLayer is built with a modern, high-performance stack:
 
-```bash
-cd backend
-npm run prisma:generate
-npm run prisma:migrate
-```
+*   **Frontend**: React 19 + Vite 8 + Tailwind CSS 4.
+*   **State Management**: Zustand for fast, predictable state updates.
+*   **Backend**: Node.js & Express 5 (Next-gen Express).
+*   **Database**: PostgreSQL with Prisma ORM for type-safe queries.
+*   **Caching & Security**: Redis for high-performance rate limiting and session management.
+*   **Analytics**: Recharts for dynamic data visualization.
 
-5. Run the apps:
+---
 
-```bash
-cd backend && npm run dev
-cd frontend && npm run dev
-```
+## 🚀 Getting Started
 
-Build the embed script whenever widget code changes:
+### Prerequisites
+*   Docker & Docker Compose
+*   Node.js 18+
 
-```bash
-cd embed
-npm run build
-```
+### Quick Setup
 
-## Production Deployment
+1.  **Clone and Start Infrastructure**:
+    ```bash
+    docker compose up -d
+    ```
 
-### Docker on a VPS (recommended)
+2.  **Configure Environment**:
+    ```bash
+    cp backend/.env.example backend/.env
+    # Update values in .env files
+    ```
 
-1. Copy `.env.example` to `.env` at the repo root and fill values.
+3.  **Install & Build**:
+    ```bash
+    npm install  # Root install if workspaces are configured, else:
+    cd backend && npm install
+    cd ../frontend && npm install
+    cd ../embed && npm install
+    ```
 
-2. Build + run:
+4.  **Database Migration**:
+    ```bash
+    cd backend
+    npm run prisma:generate
+    npm run prisma:migrate
+    ```
 
-```bash
-docker compose up -d --build
-```
+5.  **Run Development Servers**:
+    ```bash
+    # Terminal 1: Backend
+    cd backend && npm run dev
+    # Terminal 2: Frontend
+    cd frontend && npm run dev
+    ```
 
-3. Open:
+---
 
-- Dashboard: `http://<your-vps-ip>:8080`
-- API health: `http://<your-vps-ip>:4000/health`
-- Embed script: `http://<your-vps-ip>:4000/embed/poplayer.iife.js`
+## 📦 Deployment
 
-For real production, put a reverse proxy (Nginx/Caddy/Traefik) in front with HTTPS and map:
+PopLayer is containerized and ready for VPS deployment.
 
-- `app.yourdomain.com` → `web:80`
-- `api.yourdomain.com` → `api:4000`
+1.  Set your production environment variables in the root `.env`.
+2.  Run: `docker compose up -d --build`
+3.  Access your dashboard at `http://<your-ip>:8080`.
 
-Set these backend environment variables:
+---
 
-- `DATABASE_URL`: PostgreSQL connection string.
-- `JWT_SECRET`: long random secret.
-- `FRONTEND_URL`: comma-separated allowed dashboard origins.
-- `PORT`: API port.
-- `PUBLIC_API_URL`: public API URL used for snippets/docs.
-- `PUBLIC_EMBED_URL`: public URL for `poplayer.iife.js`.
+## 🛡️ Security
+*   **JWT Authentication**: Secure user sessions.
+*   **Rate Limiting**: Integrated Redis-based rate limiting to prevent API abuse.
+*   **Validation**: Strict server-side validation of all incoming leads and popup configs.
 
-Set these frontend variables:
+## 📄 License
+This project is licensed under the ISC License.
 
-- `VITE_API_URL`: public API base URL ending in `/api`.
-- `VITE_EMBED_URL`: public embed script URL.
+---
 
-Set this embed variable at build time:
-
-- `VITE_API_URL`: public API base URL ending in `/api`.
-
-Deploy order:
-
-1. Build the embed package: `cd embed && npm run build`.
-2. Build the dashboard: `cd frontend && npm run build`.
-3. Run database migrations: `cd backend && npm run prisma:deploy`.
-4. Start the backend: `cd backend && npm start`.
-5. Serve `frontend/dist` through your static host and `embed/dist/poplayer.iife.js` through the backend or CDN.
-
-## Verification
-
-Run before deployment:
-
-```bash
-cd backend && npm test
-cd frontend && npm run lint && npm run build
-cd embed && npm run build
-```
-
-## Notes
-
-- The app expects PostgreSQL in production.
-- The `.db` files in the repository are legacy local artifacts and are not used by the current Prisma schema.
-- Team member addition currently requires the invited user to already have an account.
+*Built with ❤️ for high-converting marketing teams.*

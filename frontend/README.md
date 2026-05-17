@@ -1,16 +1,60 @@
-# React + Vite
+# PopLayer Dashboard 🎨
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the frontend application for the PopLayer SaaS platform. It provides a modern, intuitive dashboard for managing workspaces, building popups, and analyzing lead conversion performance.
 
-Currently, two official plugins are available:
+## 🚀 Key Modules
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Dashboard**: High-level overview of active popups and recent activity.
+- **Popup Builder**: A sophisticated visual editor with template support, A/B testing controls, and live preview.
+- **Analytics Engine**: Real-time charts showing impressions, clicks, and conversions using Recharts.
+- **Lead Manager**: View, filter, and export leads captured across all your embedded popups.
+- **Workspace Settings**: Manage team members, API keys, and global preferences.
 
-## React Compiler
+## 🛠️ Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **React 19**: The latest React features for a responsive UI.
+- **Vite 8**: Ultra-fast build tool and development server.
+- **Tailwind CSS 4**: Utility-first styling for a premium aesthetic.
+- **Zustand**: Lightweight state management for the popup builder and user sessions.
+- **React Router 7**: Robust routing and navigation.
+- **Axios**: Promised-based HTTP client for API communication.
 
-## Expanding the ESLint configuration
+## 📦 Project Structure
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```text
+src/
+├── api/          # API client and interceptors
+├── components/   # Reusable UI components & Builder parts
+├── pages/        # Main route components (Dashboard, Builder, etc.)
+├── store/        # Zustand state stores
+├── assets/       # Global styles and static assets
+└── App.jsx       # Main application entry and routing
+```
+
+## 🏃 Local Development
+
+1.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
+
+2.  **Environment Setup**:
+    Create a `.env` file based on `.env.example`:
+    ```env
+    VITE_API_URL=http://localhost:4000/api
+    VITE_EMBED_URL=http://localhost:4000/embed/poplayer.iife.js
+    ```
+
+3.  **Start Dev Server**:
+    ```bash
+    npm run dev
+    ```
+
+4.  **Build for Production**:
+    ```bash
+    npm run build
+    ```
+
+---
+
+*Part of the PopLayer SaaS Ecosystem.*

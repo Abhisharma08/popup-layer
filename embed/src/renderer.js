@@ -77,8 +77,25 @@ function buildHTML(id, config, type) {
     const name = safeFieldName(field.id || field.label || '');
     const typeAttr = ['text', 'email', 'tel', 'number', 'url'].includes(field.type) ? field.type : 'text';
 
+    if (!name) return '';
+
+    if (field.type === 'hidden') {
+      return `<input type="hidden" name="${name}" value="${escapeHtml(field.value || '')}" />`;
+    }
+
     if (field.type === 'textarea') {
       return `<textarea class="poplayer-input" name="${name}" placeholder="${placeholder}" rows="2" ${reqAttr}></textarea>`;
+    }
+    if (field.type === 'select') {
+      const options = Array.isArray(field.options) ? field.options : [];
+      const optionHTML = options.map(option => {
+        const safeOption = escapeHtml(option);
+        return `<option value="${safeOption}">${safeOption}</option>`;
+      }).join('');
+      return `<select class="poplayer-input" name="${name}" ${reqAttr}>
+        <option value="" disabled selected>${placeholder}</option>
+        ${optionHTML}
+      </select>`;
     }
     return `<input class="poplayer-input" type="${typeAttr}" name="${name}" placeholder="${placeholder}" ${reqAttr} />`;
   }).join('');

@@ -11,7 +11,19 @@ const FIELD_TYPES = [
   { value: 'number', label: 'Number' },
   { value: 'textarea', label: 'Textarea' },
   { value: 'select', label: 'Dropdown' },
+  { value: 'hidden', label: 'Hidden' },
 ];
+
+function parseOptions(value) {
+  return String(value || '')
+    .split(/\r?\n|,/)
+    .map(option => option.trim())
+    .filter(Boolean);
+}
+
+function formatOptions(options) {
+  return Array.isArray(options) ? options.join('\n') : '';
+}
 
 const TEMPLATES = [
   {
@@ -180,7 +192,9 @@ export default function PopupBuilder() {
       label: newFieldLabel,
       type: newFieldType,
       placeholder: newFieldLabel,
-      required: false
+      required: false,
+      options: newFieldType === 'select' ? ['Option 1', 'Option 2'] : undefined,
+      value: newFieldType === 'hidden' ? '' : undefined,
     });
     setNewFieldLabel('');
     setNewFieldType('text');
@@ -432,12 +446,17 @@ export default function PopupBuilder() {
                         <div className="flex items-center gap-3">
                           <select 
                             value={field.type} 
-                            onChange={e => updateField(field.id, { type: e.target.value })}
+                            onChange={e => updateField(field.id, {
+                              type: e.target.value,
+                              options: e.target.value === 'select' ? (field.options?.length ? field.options : ['Option 1', 'Option 2']) : undefined,
+                              value: e.target.value === 'hidden' ? (field.value || '') : undefined,
+                              required: e.target.value === 'hidden' ? false : field.required
+                            })}
                             className="flex-1 px-2 py-1 border rounded text-sm bg-white"
                           >
                             {FIELD_TYPES.map(ft => <option key={ft.value} value={ft.value}>{ft.label}</option>)}
                           </select>
-                          <label className="flex items-center gap-1 text-xs">
+                          {field.type !== 'hidden' && <label className="flex items-center gap-1 text-xs">
                             <input 
                               type="checkbox" 
                               checked={field.required} 
@@ -445,8 +464,32 @@ export default function PopupBuilder() {
                               className="rounded"
                             />
                             Required
-                          </label>
+                          </label>}
                         </div>
+                        {field.type === 'select' && (
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">Dropdown Options</label>
+                            <textarea
+                              value={formatOptions(field.options)}
+                              onChange={e => updateField(field.id, { options: parseOptions(e.target.value) })}
+                              className="w-full px-2 py-1 border rounded text-sm resize-none"
+                              rows="3"
+                              placeholder="One option per line"
+                            />
+                          </div>
+                        )}
+                        {field.type === 'hidden' && (
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">Hidden Value</label>
+                            <input
+                              type="text"
+                              value={field.value || ''}
+                              onChange={e => updateField(field.id, { value: e.target.value })}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                              placeholder="Value submitted with the form"
+                            />
+                          </div>
+                        )}
                         <button onClick={() => setEditingFieldId(null)} className="text-xs text-indigo-600 font-medium">Done</button>
                       </div>
                     ) : (
@@ -468,6 +511,8 @@ export default function PopupBuilder() {
                           <div>
                             <span className="text-sm font-medium">{field.label}</span>
                             <span className="text-xs text-gray-400 ml-2">{field.type}</span>
+                            {field.type === 'select' && <span className="text-xs text-gray-400 ml-2">{field.options?.length || 0} options</span>}
+                            {field.type === 'hidden' && <span className="text-xs text-gray-400 ml-2">submits silently</span>}
                             {field.required && <span className="text-red-400 ml-1 text-xs">*</span>}
                           </div>
                         </div>
