@@ -144,6 +144,7 @@ export default function PopupBuilder() {
   const [showAddField, setShowAddField] = useState(false);
   const [newFieldLabel, setNewFieldLabel] = useState('');
   const [newFieldType, setNewFieldType] = useState('text');
+  const [newHiddenValue, setNewHiddenValue] = useState('');
   const [editingFieldId, setEditingFieldId] = useState(null);
   const [toast, setToast] = useState(null); // { message, type: 'success' | 'error' }
 
@@ -219,10 +220,11 @@ export default function PopupBuilder() {
       placeholder: newFieldType === 'hidden' ? '' : newFieldLabel,
       required: false,
       options: newFieldType === 'select' ? ['Option 1', 'Option 2'] : undefined,
-      value: newFieldType === 'hidden' ? '' : undefined,
+      value: newFieldType === 'hidden' ? newHiddenValue : undefined,
       hidden: newFieldType === 'hidden' ? true : undefined,
     });
     setNewFieldLabel('');
+    setNewHiddenValue('');
     setNewFieldType('text');
     setShowAddField(false);
   };
@@ -419,12 +421,14 @@ export default function PopupBuilder() {
               {showAddField && (
                 <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-3 space-y-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Field Label</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      {newFieldType === 'hidden' ? 'Hidden Field Name' : 'Field Label'}
+                    </label>
                     <input 
                       type="text" 
                       value={newFieldLabel} 
                       onChange={e => setNewFieldLabel(e.target.value)}
-                      placeholder="e.g. City, Company, Grade..."
+                      placeholder={newFieldType === 'hidden' ? 'e.g. campaign, source, page' : 'e.g. City, Company, Grade...'}
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-200"
                     />
                   </div>
@@ -438,6 +442,18 @@ export default function PopupBuilder() {
                       {FIELD_TYPES.map(ft => <option key={ft.value} value={ft.value}>{ft.label}</option>)}
                     </select>
                   </div>
+                  {newFieldType === 'hidden' && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Hidden Value</label>
+                      <input
+                        type="text"
+                        value={newHiddenValue}
+                        onChange={e => setNewHiddenValue(e.target.value)}
+                        placeholder="e.g. PF Website Popup"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+                      />
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <button onClick={handleAddField} className="flex-1 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
                       Add
@@ -476,7 +492,7 @@ export default function PopupBuilder() {
                             onChange={e => updateField(field.id, {
                               type: e.target.value,
                               options: e.target.value === 'select' ? (field.options?.length ? field.options : ['Option 1', 'Option 2']) : undefined,
-                              value: e.target.value === 'hidden' ? (field.value || '') : undefined,
+                              value: e.target.value === 'hidden' ? (field.value || field.placeholder || field.label || '') : undefined,
                               required: e.target.value === 'hidden' ? false : field.required,
                               placeholder: e.target.value === 'hidden' ? '' : field.placeholder,
                               hidden: e.target.value === 'hidden' ? true : undefined,
