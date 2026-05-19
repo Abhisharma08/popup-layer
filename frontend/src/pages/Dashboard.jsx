@@ -39,7 +39,9 @@ export default function Dashboard() {
   }, []);
 
   const copyScript = () => {
-    const script = `<script src="${EMBED_URL}" data-site-id="${siteId}"></script>`;
+    const separator = EMBED_URL.includes('?') ? '&' : '?';
+    const src = `${EMBED_URL}${separator}siteId=${encodeURIComponent(siteId)}`;
+    const script = `<script src="${src}" data-site-id="${siteId}"></script>`;
     navigator.clipboard.writeText(script);
     alert('Embed script copied to clipboard!');
   };

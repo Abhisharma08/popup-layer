@@ -61,7 +61,8 @@ export default function Popups() {
   const getEmbedCode = (popup) => {
     const separator = EMBED_URL.includes('?') ? '&' : '?';
     const version = popup.updatedAt ? new Date(popup.updatedAt).getTime() : Date.now();
-    return `<script src="${EMBED_URL}${separator}v=${version}" data-api-url="${API_URL}" data-popup-id="${popup.id}"></script>`;
+    const src = `${EMBED_URL}${separator}v=${version}&popupId=${encodeURIComponent(popup.id)}&apiUrl=${encodeURIComponent(API_URL)}`;
+    return `<script src="${src}" data-api-url="${API_URL}" data-popup-id="${popup.id}"></script>`;
   };
 
   const copyEmbedCode = (popup) => {

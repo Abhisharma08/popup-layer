@@ -34,7 +34,14 @@ The widget is built using Vite to ensure a compact, optimized bundle.
 To use PopLayer on a website, include the following script tag:
 
 ```html
-<script src="https://your-api.com/embed/poplayer.iife.js" data-workspace-id="YOUR_WORKSPACE_ID"></script>
+<script src="https://your-api.com/embed/poplayer.iife.js?siteId=YOUR_SITE_ID" data-site-id="YOUR_SITE_ID"></script>
+```
+
+For Google Tag Manager Custom HTML tags, prefer query parameters because GTM can recreate script
+tags without preserving custom `data-*` attributes:
+
+```html
+<script src="https://your-api.com/embed/poplayer.iife.js?popupId=YOUR_POPUP_ID&apiUrl=https%3A%2F%2Fyour-api.com%2Fapi"></script>
 ```
 
 ---

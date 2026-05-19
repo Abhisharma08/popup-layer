@@ -3,9 +3,6 @@ import { evaluateTriggers } from './triggers';
 import { renderPopup } from './renderer';
 
 function findEmbedScript() {
-  const byBundle = document.querySelector('script[src*="poplayer.iife.js"]');
-  if (byBundle) return byBundle;
-
   const fromCurrent = document.currentScript;
   if (fromCurrent?.src && /poplayer\.iife\.js/i.test(fromCurrent.src)) return fromCurrent;
 
@@ -14,6 +11,9 @@ function findEmbedScript() {
     if (s.src && /poplayer\.iife\.js/i.test(s.src)) return s;
   }
 
+  const byBundle = document.querySelector('script[src*="poplayer.iife.js"]');
+  if (byBundle) return byBundle;
+
   return (
     fromCurrent ||
     document.querySelector('script[data-popup-id]') ||
@@ -21,12 +21,58 @@ function findEmbedScript() {
   );
 }
 
+function getParam(script, names) {
+  if (!script?.src) return null;
+
+  try {
+    const url = new URL(script.src);
+    for (const name of names) {
+      const value = url.searchParams.get(name);
+      if (value) return value;
+    }
+  } catch {}
+
+  return null;
+}
+
+function getGlobalConfig() {
+  return (
+    window.PopLayerConfig ||
+    window.popLayerConfig ||
+    window.poplayerConfig ||
+    {}
+  );
+}
+
+function getEmbedConfig(script) {
+  const globalConfig = getGlobalConfig();
+
+  return {
+    popupId:
+      script?.getAttribute('data-popup-id') ||
+      getParam(script, ['popupId', 'popup_id', 'pl_popup_id']) ||
+      globalConfig.popupId ||
+      globalConfig.popup_id,
+    siteId:
+      script?.getAttribute('data-site-id') ||
+      script?.getAttribute('data-workspace-id') ||
+      getParam(script, ['siteId', 'site_id', 'workspaceId', 'workspace_id', 'pl_site_id']) ||
+      globalConfig.siteId ||
+      globalConfig.site_id ||
+      globalConfig.workspaceId ||
+      globalConfig.workspace_id,
+    apiUrl:
+      script?.getAttribute('data-api-url') ||
+      getParam(script, ['apiUrl', 'api_url', 'pl_api_url']) ||
+      globalConfig.apiUrl ||
+      globalConfig.api_url,
+  };
+}
+
 (async function () {
   const script = findEmbedScript();
 
-  const popupId = script?.getAttribute('data-popup-id');
-  const siteId = script?.getAttribute('data-site-id');
-  const apiUrl = script?.getAttribute('data-api-url');
+  const { popupId, siteId, apiUrl } = getEmbedConfig(script);
 
   if (!popupId && !siteId) return;
   const inferred = inferApiBaseFromScript(script);
