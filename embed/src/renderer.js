@@ -21,22 +21,28 @@ function isHiddenField(field) {
 export function renderPopup(popup) {
   const { id, config } = popup;
 
-  if (document.getElementById(`poplayer-overlay-${id}`)) return;
+  if (document.getElementById(`poplayer-host-${id}`)) return;
+
+  const host = document.createElement('div');
+  host.id = `poplayer-host-${id}`;
+  document.body.appendChild(host);
+
+  const shadowRoot = host.attachShadow({ mode: 'open' });
 
   const styleEl = document.createElement('style');
   styleEl.textContent = getStyles(id, config);
-  document.head.appendChild(styleEl);
+  shadowRoot.appendChild(styleEl);
 
   const overlay = document.createElement('div');
   overlay.id = `poplayer-overlay-${id}`;
   overlay.className = 'poplayer-overlay';
   overlay.innerHTML = buildHTML(id, config, popup.type);
-  document.body.appendChild(overlay);
+  shadowRoot.appendChild(overlay);
 
   trackEvent(id, 'VIEW', popup.variant);
 
   overlay.querySelector('.poplayer-close')?.addEventListener('click', () => {
-    overlay.remove();
+    host.remove();
     trackEvent(id, 'CLOSE', popup.variant);
   });
 
@@ -68,7 +74,7 @@ export function renderPopup(popup) {
 
     overlay.querySelector('.poplayer-box').innerHTML =
       `<div class="poplayer-success">${escapeHtml(config.successMessage || 'Thank you!')}</div>`;
-    setTimeout(() => overlay.remove(), 2500);
+    setTimeout(() => host.remove(), 2500);
   });
 }
 

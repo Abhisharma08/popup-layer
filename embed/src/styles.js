@@ -4,11 +4,13 @@ export function getStyles(id, config) {
 
   return `
     #poplayer-overlay-${id} {
+      all: initial;
       position: fixed; inset: 0; z-index: 999999;
       background: rgba(0,0,0,0.65);
       backdrop-filter: blur(4px);
       display: flex; align-items: center; justify-content: center;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: normal;
     }
     #poplayer-overlay-${id} .poplayer-box {
       background: ${bgColor}; color: ${textColor};
@@ -27,8 +29,14 @@ export function getStyles(id, config) {
     #poplayer-overlay-${id} .poplayer-image {
       flex: 1; overflow: hidden; min-height: 200px;
     }
+    #poplayer-overlay-${id} * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: inherit;
+    }
     #poplayer-overlay-${id} .poplayer-image img {
-      width: 100%; height: 100%; object-cover: cover;
+      width: 100%; height: 100%; object-fit: cover;
       display: block; min-height: 100%;
     }
     #poplayer-overlay-${id} .poplayer-close {
