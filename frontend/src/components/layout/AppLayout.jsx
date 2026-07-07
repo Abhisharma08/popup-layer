@@ -86,8 +86,7 @@ export default function AppLayout({ children }) {
         <header className="sticky top-0 z-30 border-b border-black/5 bg-white/95 backdrop-blur-xl lg:hidden">
           <div className="flex items-center justify-between px-4 py-4">
             <div>
-              <img src="https://res.cloudinary.com/ddqqlfsjp/image/upload/v1783415005/Screenshot_2026-07-07_at_2.30.36_PM_ss7o0b.png" alt="PopLayer" className="h-5 mb-1" />
-              <div className="text-lg font-bold text-slate-900">{pageName}</div>
+              <img src="https://res.cloudinary.com/ddqqlfsjp/image/upload/v1783415005/Screenshot_2026-07-07_at_2.30.36_PM_ss7o0b.png" alt="PopLayer" className="h-5" />
             </div>
             <button
               type="button"
@@ -97,50 +96,50 @@ export default function AppLayout({ children }) {
               Menu
             </button>
           </div>
-          {mobileNavOpen && <div className="fixed inset-0 z-40 bg-slate-900/20 lg:hidden" onClick={() => setMobileNavOpen(false)} />}
-          <div className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[86vw] border-r border-black/5 bg-white transition-transform duration-200 lg:hidden ${
-            mobileNavOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}>
-            <div className="flex items-center justify-between border-b border-black/5 px-5 py-5">
-              <div>
-                <img src="https://res.cloudinary.com/ddqqlfsjp/image/upload/v1783415005/Screenshot_2026-07-07_at_2.30.36_PM_ss7o0b.png" alt="PopLayer" className="h-6" />
-                <div className="mt-1 text-sm text-slate-500">{pageName}</div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setMobileNavOpen(false)}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600"
-              >
-                Close
-              </button>
+        </header>
+
+        {mobileNavOpen && <div className="fixed inset-0 z-40 bg-slate-900/20 lg:hidden" onClick={() => setMobileNavOpen(false)} />}
+        <div className={`fixed inset-y-0 left-0 z-50 flex flex-col w-72 max-w-[86vw] border-r border-black/5 bg-white transition-transform duration-200 lg:hidden ${
+          mobileNavOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}>
+          <div className="flex items-center justify-between border-b border-black/5 px-5 py-5">
+            <div>
+              <img src="https://res.cloudinary.com/ddqqlfsjp/image/upload/v1783415005/Screenshot_2026-07-07_at_2.30.36_PM_ss7o0b.png" alt="PopLayer" className="h-6" />
             </div>
-            <div className="px-4 py-5">
-              <div className="mb-3 px-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-                Navigation
-              </div>
-              <div className="space-y-1">
-                <NavItems location={location} onNavigate={() => setMobileNavOpen(false)} />
-              </div>
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(false)}
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600"
+            >
+              Close
+            </button>
+          </div>
+          <div className="px-4 py-5">
+            <div className="mb-3 px-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+              Navigation
             </div>
-            <div className="mt-auto border-t border-black/5 px-4 py-4">
-              <div className="mb-3 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-700">
-                  {user?.email?.[0]?.toUpperCase() || 'U'}
-                </div>
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-medium text-slate-900">{user?.name || 'Workspace owner'}</div>
-                  <div className="truncate text-xs text-slate-500">{user?.email}</div>
-                </div>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="pl-button pl-button-secondary w-full"
-              >
-                Sign out
-              </button>
+            <div className="space-y-1">
+              <NavItems location={location} onNavigate={() => setMobileNavOpen(false)} />
             </div>
           </div>
-        </header>
+          <div className="mt-auto border-t border-black/5 px-4 py-4">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-700">
+                {user?.email?.[0]?.toUpperCase() || 'U'}
+              </div>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-medium text-slate-900">{user?.name || 'Workspace owner'}</div>
+                <div className="truncate text-xs text-slate-500">{user?.email}</div>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="pl-button pl-button-secondary w-full"
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
 
         <main className="flex-1">{children}</main>
       </div>
