@@ -4,7 +4,8 @@ module.exports = (req, res, next) => {
   res.on('finish', () => {
     const duration = Date.now() - startedAt;
     const userId = req.user?.userId ? ` user=${req.user.userId}` : '';
-    console.log(`${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms${userId}`);
+    const requestId = req.requestId ? ` requestId=${req.requestId}` : '';
+    console.log(`${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms${userId}${requestId}`);
   });
 
   next();

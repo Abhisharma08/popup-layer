@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useEffect, useState } from 'react';
+import { BarChart, Bar, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import client from '../api/client';
 
 export default function Analytics() {
@@ -22,53 +22,92 @@ export default function Analytics() {
     queueMicrotask(fetchStats);
   }, []);
 
-  if (loading) return <div className="p-8">Loading analytics...</div>;
+  const totalViews = stats.reduce((acc, curr) => acc + curr.views, 0);
+  const totalSubmits = stats.reduce((acc, curr) => acc + curr.submits, 0);
+  const averageConversion = totalViews > 0 ? ((totalSubmits / totalViews) * 100).toFixed(1) : '0.0';
+
+  if (loading) return <div className="pl-page text-sm text-slate-500">Loading analytics...</div>;
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-8">Analytics Dashboard</h1>
+    <div className="pl-page">
+      <div className="pl-page-header">
+        <div>
+          <div className="pl-kicker">Performance</div>
+          <h1 className="pl-page-title mt-4">Track campaign reach and how often visits turn into captured intent.</h1>
+          <p className="pl-page-copy">
+            The current view is campaign-level and lightweight, which makes it a reliable daily snapshot while we keep building deeper reporting.
+          </p>
+        </div>
+      </div>
 
       {stats.length === 0 ? (
-        <div className="bg-white p-12 text-center rounded-lg shadow-sm border text-gray-500">
-          No data available.
+        <div className="pl-surface pl-empty rounded-[26px]">
+          No data available yet. Views and submissions will show up after your first active popup receives traffic.
         </div>
       ) : (
-        <div className="space-y-8">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <div className="text-sm text-gray-500 font-medium mb-1">Total Views</div>
-              <div className="text-3xl font-bold">{stats.reduce((acc, curr) => acc + curr.views, 0)}</div>
+        <div className="space-y-6">
+          <div className="pl-metric-grid">
+            <div className="pl-surface pl-metric-card">
+              <div className="pl-metric-label">Total views</div>
+              <div className="pl-metric-value text-slate-900">{totalViews}</div>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <div className="text-sm text-gray-500 font-medium mb-1">Total Submits</div>
-              <div className="text-3xl font-bold">{stats.reduce((acc, curr) => acc + curr.submits, 0)}</div>
+            <div className="pl-surface pl-metric-card">
+              <div className="pl-metric-label">Total submits</div>
+              <div className="pl-metric-value text-slate-900">{totalSubmits}</div>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <div className="text-sm text-gray-500 font-medium mb-1">Average Conversion</div>
-              <div className="text-3xl font-bold text-indigo-600">
-                {stats.length > 0 
-                  ? ((stats.reduce((acc, curr) => acc + curr.submits, 0) / Math.max(1, stats.reduce((acc, curr) => acc + curr.views, 0))) * 100).toFixed(1) 
-                  : 0}%
-              </div>
+            <div className="pl-surface pl-metric-card">
+              <div className="pl-metric-label">Average conversion</div>
+              <div className="pl-metric-value text-teal-700">{averageConversion}%</div>
             </div>
           </div>
 
-          {/* Chart */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h3 className="font-bold mb-6">Views vs Submits per Popup</h3>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="views" name="Views" fill="#9ca3af" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="submits" name="Submits" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+          <div className="grid gap-6 xl:grid-cols-[1.3fr,0.7fr]">
+            <div className="pl-surface pl-panel rounded-[26px]">
+              <div className="pl-panel-header">
+                <div>
+                  <div className="pl-panel-title">Views vs submits</div>
+                  <div className="pl-panel-copy">A quick read on which popups are drawing attention and which ones are converting it.</div>
+                </div>
+              </div>
+              <div className="h-[360px] p-4 sm:p-6">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stats} margin={{ top: 16, right: 16, left: 0, bottom: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(31,41,51,0.12)" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#6a7280' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 12, fill: '#6a7280' }} axisLine={false} tickLine={false} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="views" name="Views" fill="#94a3b8" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="submits" name="Submits" fill="#0f766e" radius={[8, 8, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="pl-surface pl-panel rounded-[26px]">
+              <div className="pl-panel-header">
+                <div>
+                  <div className="pl-panel-title">Conversion by popup</div>
+                  <div className="pl-panel-copy">Sorted for fast scanning during day-to-day optimization.</div>
+                </div>
+              </div>
+              <div className="space-y-3 p-5">
+                {[...stats]
+                  .sort((a, b) => Number(b.conversionRate) - Number(a.conversionRate))
+                  .map(item => (
+                    <div key={item.popupId} className="rounded-[20px] border border-black/5 bg-white/75 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="font-semibold text-slate-900">{item.name}</div>
+                          <div className="mt-1 text-sm text-slate-500">
+                            {item.views} views · {item.submits} submits
+                          </div>
+                        </div>
+                        <div className="text-lg font-bold text-teal-700">{item.conversionRate}%</div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
             </div>
           </div>
         </div>

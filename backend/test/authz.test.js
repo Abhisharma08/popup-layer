@@ -6,6 +6,7 @@ const {
   getAccessibleWorkspace,
   getAccessiblePopup,
   requireWorkspaceAdmin,
+  requirePopupAdmin,
 } = require('../src/lib/authz');
 
 const originalWorkspaceFindFirst = prisma.workspace.findFirst;
@@ -64,4 +65,19 @@ test('requireWorkspaceAdmin rejects non-admin member', async () => {
     () => requireWorkspaceAdmin('user-2', 'workspace-1'),
     error => error.status === 403 && /admin/.test(error.message)
   );
+});
+
+test('requirePopupAdmin checks popup workspace admin access', async () => {
+  prisma.popup.findFirst = async () => ({ id: 'popup-1', workspaceId: 'workspace-1' });
+  prisma.workspace.findFirst = async () => ({ id: 'workspace-1', userId: 'owner-1' });
+  prisma.workspaceMember.findUnique = async () => ({ role: 'MEMBER' });
+
+  await assert.rejects(
+    () => requirePopupAdmin('user-2', 'popup-1'),
+    error => error.status === 403 && /admin/.test(error.message)
+  );
+
+  prisma.workspaceMember.findUnique = async () => ({ role: 'ADMIN' });
+  const popup = await requirePopupAdmin('user-2', 'popup-1');
+  assert.equal(popup.id, 'popup-1');
 });

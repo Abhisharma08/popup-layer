@@ -4,6 +4,7 @@ const prisma = require('../lib/prisma');
 const { asyncHandler } = require('../lib/http');
 const { getAccessibleWorkspace, requireWorkspaceAdmin } = require('../lib/authz');
 const { requireString, optionalString, validateEmail } = require('../lib/validators');
+const { normalizeHostname } = require('../lib/domains');
 
 router.use(auth);
 
@@ -36,9 +37,14 @@ router.post('/', asyncHandler(async (req, res) => {
 }));
 
 router.get('/:id/members', asyncHandler(async (req, res) => {
-  await getAccessibleWorkspace(req.user.userId, req.params.id);
+  await requireWorkspaceAdmin(req.user.userId, req.params.id);
   const members = await prisma.workspaceMember.findMany({
     where: { workspaceId: req.params.id },
+    include: {
+      user: {
+        select: { id: true, email: true, name: true, createdAt: true },
+      },
+    },
     orderBy: { createdAt: 'asc' },
   });
   res.json(members);
@@ -62,8 +68,50 @@ router.post('/:id/members', asyncHandler(async (req, res) => {
       userId: user.id,
       role,
     },
+    include: {
+      user: {
+        select: { id: true, email: true, name: true, createdAt: true },
+      },
+    },
   });
   res.status(201).json(member);
+}));
+
+router.get('/:id/domains', asyncHandler(async (req, res) => {
+  await requireWorkspaceAdmin(req.user.userId, req.params.id);
+  const domains = await prisma.workspaceDomain.findMany({
+    where: { workspaceId: req.params.id },
+    orderBy: { createdAt: 'asc' },
+  });
+  res.json(domains);
+}));
+
+router.post('/:id/domains', asyncHandler(async (req, res) => {
+  await requireWorkspaceAdmin(req.user.userId, req.params.id);
+  const domain = normalizeHostname(requireString(req.body.domain, 'Domain', 255));
+  if (!domain) return res.status(400).json({ error: 'Valid domain is required' });
+
+  const workspaceDomain = await prisma.workspaceDomain.upsert({
+    where: { workspaceId_domain: { workspaceId: req.params.id, domain } },
+    update: { verified: true },
+    create: {
+      workspaceId: req.params.id,
+      domain,
+      verified: true,
+    },
+  });
+  res.status(201).json(workspaceDomain);
+}));
+
+router.delete('/:id/domains/:domainId', asyncHandler(async (req, res) => {
+  await requireWorkspaceAdmin(req.user.userId, req.params.id);
+  await prisma.workspaceDomain.deleteMany({
+    where: {
+      id: req.params.domainId,
+      workspaceId: req.params.id,
+    },
+  });
+  res.json({ success: true });
 }));
 
 module.exports = router;

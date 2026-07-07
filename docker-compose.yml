@@ -25,6 +25,7 @@ services:
       PORT: 4000
       DATABASE_URL: postgresql://poplayer:${POSTGRES_PASSWORD}@db:5432/poplayer?schema=public
       JWT_SECRET: ${JWT_SECRET:?set in .env}
+      ALLOW_SIGNUP: ${ALLOW_SIGNUP:-false}
       FRONTEND_URL: ${FRONTEND_URL:-}
       PUBLIC_API_URL: ${PUBLIC_API_URL:-}
       PUBLIC_EMBED_URL: ${PUBLIC_EMBED_URL:-}

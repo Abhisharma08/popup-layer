@@ -53,7 +53,7 @@ export async function trackEvent(popupId, event, variant = "A") {
     await fetch(`${apiBase}/analytics/event`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ popupId, event, variant })
+      body: JSON.stringify({ popupId, event, variant, sourceUrl: window.location.href })
     });
   } catch {}
 }

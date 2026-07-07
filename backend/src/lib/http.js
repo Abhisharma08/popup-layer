@@ -25,7 +25,10 @@ function errorHandler(err, req, res, next) {
   if (status >= 500) {
     console.error(err);
   }
-  res.status(status).json({ error: status >= 500 ? 'Internal server error' : err.message });
+  res.status(status).json({
+    error: status >= 500 ? 'Internal server error' : err.message,
+    requestId: req.requestId,
+  });
 }
 
 module.exports = {

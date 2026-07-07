@@ -2,7 +2,8 @@ const router = require('express').Router();
 const auth = require('../middleware/auth');
 const prisma = require('../lib/prisma');
 const { asyncHandler } = require('../lib/http');
-const { getAccessibleWorkspace, getAccessiblePopup } = require('../lib/authz');
+const { getAccessibleWorkspace, getAccessiblePopup, requireWorkspaceAdmin, requirePopupAdmin } = require('../lib/authz');
+const { assertSafeWebhookUrl } = require('../lib/security');
 const {
   requireString,
   validateJsonObject,
@@ -28,7 +29,7 @@ function popupDataFromBody(body, isCreate = false) {
     name: requireString(body.name, 'Popup name', 120),
     config: JSON.stringify(validateJsonObject(body.config, 'Config')),
     triggers: JSON.stringify(validateJsonObject(body.triggers, 'Triggers')),
-    webhookUrl: validateOptionalUrl(body.webhookUrl, 'Webhook URL'),
+    webhookUrl: assertSafeWebhookUrl(validateOptionalUrl(body.webhookUrl, 'Webhook URL')),
     abTestEnabled: Boolean(body.abTestEnabled),
     configB: body.configB ? JSON.stringify(validateJsonObject(body.configB, 'Variant B config')) : null,
     triggersB: body.triggersB ? JSON.stringify(validateJsonObject(body.triggersB, 'Variant B triggers')) : null,
@@ -60,14 +61,14 @@ router.get('/:id', asyncHandler(async (req, res) => {
 
 router.post('/', asyncHandler(async (req, res) => {
   const data = popupDataFromBody(req.body, true);
-  await getAccessibleWorkspace(req.user.userId, data.workspaceId);
+  await requireWorkspaceAdmin(req.user.userId, data.workspaceId);
 
   const popup = await prisma.popup.create({ data });
   res.status(201).json(serializePopup(popup));
 }));
 
 router.put('/:id', asyncHandler(async (req, res) => {
-  await getAccessiblePopup(req.user.userId, req.params.id);
+  await requirePopupAdmin(req.user.userId, req.params.id);
   const data = popupDataFromBody(req.body);
 
   const popup = await prisma.popup.update({
@@ -78,7 +79,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
 }));
 
 router.patch('/:id/status', asyncHandler(async (req, res) => {
-  await getAccessiblePopup(req.user.userId, req.params.id);
+  await requirePopupAdmin(req.user.userId, req.params.id);
   const status = validateStatus(req.body.status);
 
   const popup = await prisma.popup.update({
@@ -89,7 +90,7 @@ router.patch('/:id/status', asyncHandler(async (req, res) => {
 }));
 
 router.delete('/:id', asyncHandler(async (req, res) => {
-  await getAccessiblePopup(req.user.userId, req.params.id);
+  await requirePopupAdmin(req.user.userId, req.params.id);
 
   await prisma.popup.delete({
     where: { id: req.params.id }

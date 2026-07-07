@@ -48,39 +48,64 @@ PopLayer is built with a modern, high-performance stack:
 *   Docker & Docker Compose
 *   Node.js 18+
 
-### Quick Setup
+### Local Docker Setup
 
-1.  **Clone and Start Infrastructure**:
+1.  **Configure Environment**:
     ```bash
-    docker compose up -d
+    cp .env.example .env
+    ```
+    For local Docker use these values:
+    ```env
+    POSTGRES_PASSWORD="poplayer_local_password"
+    JWT_SECRET="poplayer_local_jwt_secret_change_me"
+    ALLOW_SIGNUP="true"
+    FRONTEND_URL="http://localhost:8080"
+    PUBLIC_API_URL="http://localhost:4000/api"
+    PUBLIC_EMBED_URL="http://localhost:4000/embed/poplayer.iife.js"
+    VITE_API_URL="http://localhost:4000/api"
+    VITE_EMBED_URL="http://localhost:4000/embed/poplayer.iife.js"
     ```
 
-2.  **Configure Environment**:
+2.  **Start the stack**:
+    ```bash
+    docker compose up -d --build
+    ```
+
+3.  **Open the app**:
+    Dashboard: `http://localhost:8080`
+    API: `http://localhost:4000`
+    Health: `http://localhost:4000/health`
+
+4.  **Create the first user**:
+    Open `http://localhost:8080/signup`
+
+5.  **Useful Docker commands**:
+    ```bash
+    docker compose ps
+    docker compose logs -f api
+    docker compose logs -f web
+    docker compose down
+    ```
+
+### Local Non-Docker Development
+
+1.  **Create env files**:
     ```bash
     cp backend/.env.example backend/.env
-    # Update values in .env files
+    cp frontend/.env.example frontend/.env
+    cp embed/.env.example embed/.env
     ```
 
-3.  **Install & Build**:
+2.  **Install dependencies**:
     ```bash
-    npm install  # Root install if workspaces are configured, else:
     cd backend && npm install
     cd ../frontend && npm install
     cd ../embed && npm install
     ```
 
-4.  **Database Migration**:
+3.  **Run local servers**:
     ```bash
-    cd backend
-    npm run prisma:generate
-    npm run prisma:migrate
-    ```
-
-5.  **Run Development Servers**:
-    ```bash
-    # Terminal 1: Backend
     cd backend && npm run dev
-    # Terminal 2: Frontend
     cd frontend && npm run dev
     ```
 
@@ -98,8 +123,9 @@ PopLayer is containerized and ready for VPS deployment.
 
 ## 🛡️ Security
 *   **JWT Authentication**: Secure user sessions.
-*   **Rate Limiting**: Integrated Redis-based rate limiting to prevent API abuse.
-*   **Validation**: Strict server-side validation of all incoming leads and popup configs.
+*   **Rate Limiting**: API and public ingestion endpoints are rate limited.
+*   **Validation**: Server-side validation is applied to incoming leads and popup configs.
+*   **Live Hardening**: Domain allowlisting, webhook delivery logging, webhook retry support, and safer CSV export are included in the current codebase.
 
 ## 📄 License
 This project is licensed under the ISC License.

@@ -50,8 +50,15 @@ async function requireWorkspaceAdmin(userId, workspaceId) {
   return workspace;
 }
 
+async function requirePopupAdmin(userId, popupId) {
+  const popup = await getAccessiblePopup(userId, popupId);
+  await requireWorkspaceAdmin(userId, popup.workspaceId);
+  return popup;
+}
+
 module.exports = {
   getAccessibleWorkspace,
   getAccessiblePopup,
   requireWorkspaceAdmin,
+  requirePopupAdmin,
 };

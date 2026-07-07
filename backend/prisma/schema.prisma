@@ -14,6 +14,7 @@ model User {
   name         String?
   createdAt    DateTime    @default(now())
   workspaces   Workspace[]
+  memberships  WorkspaceMember[]
 }
 
 model Workspace {
@@ -26,6 +27,9 @@ model Workspace {
   createdAt DateTime @default(now())
   popups    Popup[]
   members   WorkspaceMember[]
+  domains   WorkspaceDomain[]
+
+  @@index([userId])
 }
 
 model WorkspaceMember {
@@ -33,10 +37,24 @@ model WorkspaceMember {
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   role        String    @default("MEMBER") // ADMIN, MEMBER
   createdAt   DateTime  @default(now())
 
   @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+model WorkspaceDomain {
+  id          String    @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  domain      String
+  verified    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  @@unique([workspaceId, domain])
+  @@index([domain])
 }
 
 model Popup {
@@ -56,6 +74,10 @@ model Popup {
   updatedAt     DateTime    @updatedAt
   leads         Lead[]
   events        AnalyticsEvent[]
+  webhookDeliveries WebhookDelivery[]
+
+  @@index([workspaceId])
+  @@index([workspaceId, status])
 }
 
 model Lead {
@@ -69,8 +91,10 @@ model Lead {
   customData String? // JSON string of custom form fields
   variant   String   @default("A") // "A" or "B"
   createdAt DateTime @default(now())
+  webhookDeliveries WebhookDelivery[]
 
   @@unique([popupId, email])
+  @@index([popupId, createdAt])
 }
 
 model AnalyticsEvent {
@@ -80,4 +104,26 @@ model AnalyticsEvent {
   event     String     // VIEW, SUBMIT, CLOSE
   variant   String     @default("A") // "A" or "B"
   createdAt DateTime   @default(now())
+
+  @@index([popupId, event, createdAt])
+  @@index([popupId, createdAt])
+}
+
+model WebhookDelivery {
+  id         String   @id @default(uuid())
+  popupId    String
+  popup      Popup    @relation(fields: [popupId], references: [id], onDelete: Cascade)
+  leadId     String?
+  lead       Lead?    @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  url        String
+  status     String   @default("PENDING") // PENDING, SUCCESS, FAILED
+  statusCode Int?
+  attempts   Int      @default(1)
+  lastError  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([popupId, createdAt])
+  @@index([leadId])
+  @@index([status, createdAt])
 }

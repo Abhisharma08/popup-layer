@@ -4,6 +4,8 @@ const auth = require('../middleware/auth');
 const prisma = require('../lib/prisma');
 const { asyncHandler } = require('../lib/http');
 const { getAccessibleWorkspace } = require('../lib/authz');
+const { assertAllowedPublicOrigin } = require('../lib/domains');
+const { buildPopupStats } = require('../lib/analyticsStats');
 const { cleanString, validateAnalyticsEvent, validateVariant } = require('../lib/validators');
 
 const eventLimiter = rateLimit({
@@ -19,22 +21,17 @@ router.get('/', auth, asyncHandler(async (req, res) => {
     where: { workspaceId: workspace.id },
     select: { id: true, name: true },
   });
+  const popupIds = popups.map(popup => popup.id);
 
-  const stats = await Promise.all(popups.map(async (popup) => {
-    const [views, submits] = await Promise.all([
-      prisma.analyticsEvent.count({ where: { popupId: popup.id, event: 'VIEW' } }),
-      prisma.analyticsEvent.count({ where: { popupId: popup.id, event: 'SUBMIT' } }),
-    ]);
-    return {
-      popupId: popup.id,
-      name: popup.name,
-      views,
-      submits,
-      conversionRate: views > 0 ? ((submits / views) * 100).toFixed(1) : '0.0',
-    };
-  }));
+  const groupedEvents = popupIds.length
+    ? await prisma.analyticsEvent.groupBy({
+      by: ['popupId', 'event'],
+      where: { popupId: { in: popupIds } },
+      _count: { _all: true },
+    })
+    : [];
 
-  res.json(stats);
+  res.json(buildPopupStats(popups, groupedEvents));
 }));
 
 router.post('/event', eventLimiter, asyncHandler(async (req, res) => {
@@ -48,11 +45,16 @@ router.post('/event', eventLimiter, asyncHandler(async (req, res) => {
 
   const popup = await prisma.popup.findUnique({
     where: { id: popupId },
-    select: { id: true, status: true },
+    include: {
+      workspace: {
+        include: { domains: true },
+      },
+    },
   });
   if (!popup || popup.status !== 'ACTIVE') {
     return res.status(404).json({ error: 'Popup not found' });
   }
+  await assertAllowedPublicOrigin(req, popup);
 
   await prisma.analyticsEvent.create({ data: { popupId, event, variant } });
   res.json({ ok: true });

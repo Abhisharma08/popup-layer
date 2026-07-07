@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import client from '../api/client';
 
@@ -8,7 +8,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const navigate = useNavigate();
   const { login } = useAuthStore();
 
@@ -31,80 +31,86 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 tracking-tight">
-          Sign in to PopLayer
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
-          <Link to="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
-            start your 14-day free trial
-          </Link>
-        </p>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded text-sm text-center font-medium">
-                {error}
-              </div>
-            )}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Email address</label>
-              <div className="mt-1">
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Password</label>
-              <div className="mt-1">
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input id="remember-me" name="remember-me" type="checkbox" className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
-                  Forgot your password?
-                </a>
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-              >
-                {loading ? 'Signing in...' : 'Sign in'}
-              </button>
-            </div>
-          </form>
+    <div className="pl-auth-shell">
+      <section className="pl-auth-hero">
+        <div>
+          <div className="mb-2 inline-block rounded-lg bg-white p-2">
+            <img src="https://res.cloudinary.com/ddqqlfsjp/image/upload/v1783415005/Screenshot_2026-07-07_at_2.30.36_PM_ss7o0b.png" alt="PopLayer" className="h-8" />
+          </div>
+          <h1 className="mt-6 max-w-xl text-4xl font-bold tracking-tight text-white sm:text-5xl">
+            Launch faster, see which campaigns pull weight, and keep every embed under control.
+          </h1>
+          <p className="mt-5 max-w-lg text-base leading-7 text-white/72">
+            PopLayer brings popup design, installs, lead capture, and delivery visibility into one focused operator surface.
+          </p>
         </div>
-      </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-[24px] border border-white/12 bg-white/8 p-4">
+            <div className="text-sm font-semibold text-white">Builder</div>
+            <div className="mt-2 text-sm leading-6 text-white/65">Shape campaigns visually without leaving the workspace.</div>
+          </div>
+          <div className="rounded-[24px] border border-white/12 bg-white/8 p-4">
+            <div className="text-sm font-semibold text-white">Leads</div>
+            <div className="mt-2 text-sm leading-6 text-white/65">Track captured submissions and retry webhook failures quickly.</div>
+          </div>
+          <div className="rounded-[24px] border border-white/12 bg-white/8 p-4">
+            <div className="text-sm font-semibold text-white">Embeds</div>
+            <div className="mt-2 text-sm leading-6 text-white/65">Keep a clean install path across every site you own.</div>
+          </div>
+        </div>
+      </section>
+
+      <section className="pl-surface pl-auth-card">
+        <div className="mb-6">
+          <div className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-400">Welcome back</div>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Sign in to your workspace</h2>
+          <p className="mt-2 text-sm text-slate-500">
+            New here?{' '}
+            <Link to="/signup" className="font-semibold text-teal-700 hover:text-teal-800">
+              Create an account
+            </Link>
+          </p>
+        </div>
+
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          {error && (
+            <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-medium text-orange-700">
+              {error}
+            </div>
+          )}
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">Email address</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="pl-field"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">Password</label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="pl-field"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="pl-button w-full"
+          >
+            {loading ? 'Signing in...' : 'Sign in'}
+          </button>
+        </form>
+      </section>
     </div>
   );
 }
