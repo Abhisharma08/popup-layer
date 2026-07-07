@@ -73,21 +73,11 @@ export default function PopupPreview({ config, type }) {
   );
 
   const imagePanel = imageUrl ? (
-    <div 
-      className="overflow-hidden" 
-      style={{ 
-        flex: '1', 
-        minHeight: layout === 'side-by-side' ? '100%' : undefined,
-        borderRadius: imageSide === 'left' 
-          ? `${borderRadius || 12}px 0 0 ${borderRadius || 12}px` 
-          : `0 ${borderRadius || 12}px ${borderRadius || 12}px 0`
-      }}
-    >
+    <div className="flex-1 flex overflow-hidden min-h-[200px] sm:min-h-full">
       <img 
         src={imageUrl} 
         alt="Popup visual" 
-        className="w-full h-full object-cover"
-        style={{ minHeight: '300px' }}
+        className="w-full h-full object-cover block"
       />
     </div>
   ) : null;
@@ -99,7 +89,7 @@ export default function PopupPreview({ config, type }) {
       <div className="absolute inset-0 bg-black/30 pointer-events-none" />
 
       <div
-        className={`relative z-10 shadow-2xl overflow-hidden ${isSideBySide ? 'flex max-w-3xl' : 'max-w-md'}`}
+        className={`relative z-10 shadow-2xl overflow-hidden ${isSideBySide ? 'flex flex-col sm:flex-row max-w-3xl' : 'max-w-md'}`}
         style={{ 
           backgroundColor: bgColor, 
           borderRadius: `${borderRadius || 12}px`, 

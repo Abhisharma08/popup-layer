@@ -27,7 +27,7 @@ export function getStyles(id, config) {
       padding: 2rem; flex: 1; position: relative;
     }
     #poplayer-overlay-${id} .poplayer-image {
-      flex: 1; overflow: hidden; min-height: 200px;
+      flex: 1; overflow: hidden; min-height: 200px; display: flex;
     }
     #poplayer-overlay-${id} * {
       box-sizing: border-box;
