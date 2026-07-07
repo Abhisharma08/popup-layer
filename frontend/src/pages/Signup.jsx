@@ -36,7 +36,7 @@ export default function Signup() {
       <section className="pl-auth-hero">
         <div>
           <div className="mb-2 inline-block rounded-lg bg-white p-2">
-            <img src="https://res.cloudinary.com/ddqqlfsjp/image/upload/v1783415005/Screenshot_2026-07-07_at_2.30.36_PM_ss7o0b.png" alt="PopLayer" className="h-8" />
+            <img src="https://res.cloudinary.com/ddqqlfsjp/image/upload/v1783415005/Screenshot_2026-07-07_at_2.30.36_PM_ss7o0b.png" alt="PopLayer" className="h-10" />
           </div>
           <h1 className="mt-6 max-w-xl text-4xl font-bold tracking-tight text-white sm:text-5xl">
             Build the first workspace, wire the first site, and keep the whole funnel visible from day one.

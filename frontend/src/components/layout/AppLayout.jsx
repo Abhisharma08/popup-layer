@@ -49,7 +49,7 @@ export default function AppLayout({ children }) {
       <aside className="hidden lg:flex lg:min-h-screen lg:w-64 lg:flex-col lg:justify-between lg:border-r lg:border-black/5 lg:bg-white">
         <div>
           <div className="border-b border-black/5 px-6 py-6">
-            <img src="https://res.cloudinary.com/ddqqlfsjp/image/upload/v1783415005/Screenshot_2026-07-07_at_2.30.36_PM_ss7o0b.png" alt="PopLayer" className="h-8" />
+            <img src="https://res.cloudinary.com/ddqqlfsjp/image/upload/v1783415005/Screenshot_2026-07-07_at_2.30.36_PM_ss7o0b.png" alt="PopLayer" className="h-10" />
             <p className="mt-1 text-sm text-slate-500">Popup and lead capture</p>
           </div>
 
@@ -86,7 +86,7 @@ export default function AppLayout({ children }) {
         <header className="sticky top-0 z-30 border-b border-black/5 bg-white/95 backdrop-blur-xl lg:hidden">
           <div className="flex items-center justify-between px-4 py-4">
             <div>
-              <img src="https://res.cloudinary.com/ddqqlfsjp/image/upload/v1783415005/Screenshot_2026-07-07_at_2.30.36_PM_ss7o0b.png" alt="PopLayer" className="h-5" />
+              <img src="https://res.cloudinary.com/ddqqlfsjp/image/upload/v1783415005/Screenshot_2026-07-07_at_2.30.36_PM_ss7o0b.png" alt="PopLayer" className="h-7" />
             </div>
             <button
               type="button"
@@ -104,7 +104,7 @@ export default function AppLayout({ children }) {
         }`}>
           <div className="flex items-center justify-between border-b border-black/5 px-5 py-5">
             <div>
-              <img src="https://res.cloudinary.com/ddqqlfsjp/image/upload/v1783415005/Screenshot_2026-07-07_at_2.30.36_PM_ss7o0b.png" alt="PopLayer" className="h-6" />
+              <img src="https://res.cloudinary.com/ddqqlfsjp/image/upload/v1783415005/Screenshot_2026-07-07_at_2.30.36_PM_ss7o0b.png" alt="PopLayer" className="h-8" />
             </div>
             <button
               type="button"
