@@ -158,7 +158,7 @@ export default function Popups() {
                   <Link to={`/popups/${popup.id}/edit`} className="pl-button pl-button-secondary">
                     Edit
                   </Link>
-                  <Link to={`/popups/${popup.id}/leads`} className="pl-button pl-button-secondary">
+                  <Link to={`/leads?popupId=${popup.id}`} className="pl-button pl-button-secondary">
                     Leads
                   </Link>
                   {tab === 'active' ? (

@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/authStore';
 const navLinks = [
   { name: 'Dashboard', path: '/dashboard' },
   { name: 'Popups', path: '/popups' },
+  { name: 'Leads', path: '/leads' },
   { name: 'Analytics', path: '/analytics' },
   { name: 'Settings', path: '/settings' },
 ];

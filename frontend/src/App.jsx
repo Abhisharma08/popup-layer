@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Popups from './pages/Popups';
 import PopupBuilder from './pages/PopupBuilder';
 import PopupLeads from './pages/PopupLeads';
+import Leads from './pages/Leads';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import AppLayout from './components/layout/AppLayout';
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/popups/new" element={<PrivateRoute><PopupBuilder /></PrivateRoute>} />
         <Route path="/popups/:id/edit" element={<PrivateRoute><PopupBuilder /></PrivateRoute>} />
         <Route path="/popups/:id/leads" element={<PrivateRoute><AppLayout><PopupLeads /></AppLayout></PrivateRoute>} />
+        <Route path="/leads" element={<PrivateRoute><AppLayout><Leads /></AppLayout></PrivateRoute>} />
         <Route path="/analytics" element={<PrivateRoute><AppLayout><Analytics /></AppLayout></PrivateRoute>} />
         <Route path="/settings" element={<PrivateRoute><AppLayout><Settings /></AppLayout></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/dashboard" />} />
