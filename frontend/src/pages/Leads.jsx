@@ -27,15 +27,19 @@ export default function Leads() {
       setPopups(activePopups);
       
       // Auto-select the first popup if none is selected and there are active popups
-      if (!selectedPopupId && activePopups.length > 0) {
-        setSearchParams({ popupId: activePopups[0].id }, { replace: true });
-      }
+      setSearchParams(prev => {
+        if (!prev.get('popupId') && activePopups.length > 0) {
+          prev.set('popupId', activePopups[0].id);
+          return prev;
+        }
+        return prev;
+      }, { replace: true });
     } catch (e) {
       console.error(e);
     } finally {
       setLoadingPopups(false);
     }
-  }, [selectedPopupId, setSearchParams]);
+  }, [setSearchParams]);
 
   useEffect(() => {
     queueMicrotask(fetchPopups);

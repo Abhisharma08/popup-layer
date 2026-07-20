@@ -61,14 +61,7 @@ function createApp() {
     max: 100,
     message: { error: 'Too many requests, please try again later.' }
   });
-  const leadLimiter = rateLimit({
-    windowMs: 1 * 60 * 1000,
-    max: 5,
-    message: { error: 'Too many lead submissions, please slow down.' }
-  });
-
   app.use(globalLimiter);
-  app.use('/api/leads', leadLimiter);
 
   app.use(express.json({ limit: '1mb' }));
   app.use(requestLogger);
