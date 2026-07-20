@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import client from '../api/client';
+import { createLatestRequestGuard } from '../utils/requestGuard';
 
 export default function Leads() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -10,8 +11,13 @@ export default function Leads() {
   const [loadingPopups, setLoadingPopups] = useState(true);
   const [loadingLeads, setLoadingLeads] = useState(false);
   const [retryingId, setRetryingId] = useState(null);
+  const leadRequestGuardRef = useRef(null);
 
   const selectedPopupId = searchParams.get('popupId');
+
+  if (!leadRequestGuardRef.current) {
+    leadRequestGuardRef.current = createLatestRequestGuard();
+  }
 
   const fetchPopups = useCallback(async () => {
     try {
@@ -41,18 +47,28 @@ export default function Leads() {
       setDeliveries([]);
       return;
     }
+
+    const requestToken = leadRequestGuardRef.current.begin();
     setLoadingLeads(true);
+    setLeads([]);
+    setDeliveries([]);
+
     try {
       const [leadsRes, deliveriesRes] = await Promise.all([
         client.get('/leads', { params: { popupId: selectedPopupId } }),
         client.get('/leads/webhook-deliveries', { params: { popupId: selectedPopupId, limit: 10 } }),
       ]);
+
+      if (!leadRequestGuardRef.current.isCurrent(requestToken)) return;
+
       setLeads(leadsRes.data);
       setDeliveries(deliveriesRes.data);
     } catch (e) {
       console.error(e);
     } finally {
-      setLoadingLeads(false);
+      if (leadRequestGuardRef.current.isCurrent(requestToken)) {
+        setLoadingLeads(false);
+      }
     }
   }, [selectedPopupId]);
 

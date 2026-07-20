@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { applyNoCacheHeaders } from './cacheHeaders';
 
 const getBaseUrl = () => {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
@@ -23,8 +24,13 @@ const client = axios.create({
 
 client.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
+  const nextConfig = applyNoCacheHeaders(config);
+
+  if (token) {
+    nextConfig.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return nextConfig;
 });
 
 client.interceptors.response.use(

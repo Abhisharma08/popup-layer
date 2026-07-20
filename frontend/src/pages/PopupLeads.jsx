@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import client from '../api/client';
+import { createLatestRequestGuard } from '../utils/requestGuard';
 
 export default function PopupLeads() {
   const { id } = useParams();
@@ -8,19 +9,34 @@ export default function PopupLeads() {
   const [deliveries, setDeliveries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [retryingId, setRetryingId] = useState(null);
+  const leadRequestGuardRef = useRef(null);
+
+  if (!leadRequestGuardRef.current) {
+    leadRequestGuardRef.current = createLatestRequestGuard();
+  }
 
   const fetchLeads = useCallback(async () => {
+    const requestToken = leadRequestGuardRef.current.begin();
+    setLoading(true);
+    setLeads([]);
+    setDeliveries([]);
+
     try {
       const [leadsRes, deliveriesRes] = await Promise.all([
         client.get('/leads', { params: { popupId: id } }),
         client.get('/leads/webhook-deliveries', { params: { popupId: id, limit: 10 } }),
       ]);
+
+      if (!leadRequestGuardRef.current.isCurrent(requestToken)) return;
+
       setLeads(leadsRes.data);
       setDeliveries(deliveriesRes.data);
     } catch (e) {
       console.error(e);
     } finally {
-      setLoading(false);
+      if (leadRequestGuardRef.current.isCurrent(requestToken)) {
+        setLoading(false);
+      }
     }
   }, [id]);
 
