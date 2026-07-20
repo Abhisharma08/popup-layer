@@ -23,7 +23,7 @@
       padding: 2rem; flex: 1; position: relative;
     }
     #poplayer-overlay-${e} .poplayer-image {
-      flex: 1; overflow: hidden; min-height: 200px;
+      flex: 1; overflow: hidden; min-height: 200px; display: flex;
     }
     #poplayer-overlay-${e} * {
       box-sizing: border-box;
@@ -74,8 +74,14 @@
         max-width: 400px;
       }
       #poplayer-overlay-${e} .poplayer-image {
-        min-height: 160px;
-        max-height: 200px;
+        min-height: unset;
+        max-height: none;
+        flex: none;
+      }
+      #poplayer-overlay-${e} .poplayer-image img {
+        height: auto;
+        min-height: unset;
+        object-fit: contain;
       }
       #poplayer-overlay-${e} .poplayer-headline {
         font-size: 1.25rem;

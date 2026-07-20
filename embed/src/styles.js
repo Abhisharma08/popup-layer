@@ -78,8 +78,14 @@ export function getStyles(id, config) {
         max-width: 400px;
       }
       #poplayer-overlay-${id} .poplayer-image {
-        min-height: 160px;
-        max-height: 200px;
+        min-height: unset;
+        max-height: none;
+        flex: none;
+      }
+      #poplayer-overlay-${id} .poplayer-image img {
+        height: auto;
+        min-height: unset;
+        object-fit: contain;
       }
       #poplayer-overlay-${id} .poplayer-headline {
         font-size: 1.25rem;
